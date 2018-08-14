@@ -57,31 +57,55 @@ You should see YDLIDAR's scan result in the console:
  YDLIDAR C++ TEST
 
 Please enter the lidar port:/dev/ttyUSB0
+
 Please enter the lidar baud rate:230400
+
 Please enter the lidar intensity:0
+
 SDK Version: 1..3.7
+
 LIDAR Version: 1.3.7
+
 fhs_lock: creating lockfile:      14323
 
 firmware: 521
+
 [YDLIDAR] Connection established in [/dev/ttyUSB0]:
+
 Firmware version: 2.0.9
+
 Hardware version: 2
+
 Model: G4
+
 Serial: 2018041900000040
+
 [YDLIDAR INFO] Current Sampling Rate : 9K
+
 [YDLIDAR INFO] Current Scan Frequency : 7.000000Hz
+
 Get Lidar data timeout
+
 received data sample size:1195
+
 frame timestamp is:1534228901618879800
+
 received timestamp is:1534228901742776000
+
 received data sample size:1203
+
 frame timestamp is:1534228901741838800
+
 received timestamp is:1534228901876750000
+
 ^Csignal_handler(2)
+
 received data sample size:1957
+
 frame timestamp is:1534228901875864800
+
 received timestamp is:1534228902127891000
+
 fhs_unlock: Removing LockFile
 
 
