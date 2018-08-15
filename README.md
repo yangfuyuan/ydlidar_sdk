@@ -270,7 +270,7 @@ coordinate system
 <p align="middle">
     <a href="https://github.com/yangfuyuan
     " target="_blank"><img src="image.png"
-    alt="IMAGE ALT TEXT HERE" width="851" height="862" border="10"/></a>
+    alt="IMAGE ALT TEXT HERE" width="426" height="426" border="10"/></a>
 </p>
 
 
