@@ -159,93 +159,93 @@ windows:
 You should see YDLIDAR's scan result in the console:
   YDLIDAR C++ TEST
 
-  Radar[ydlidar7] detected, whether to select current radar(yes/no)?:yes
+  	Radar[ydlidar7] detected, whether to select current radar(yes/no)?:yes
 
-  0. ydlidar7
+  	0. ydlidar7
 
-  Please select the lidar port:0
+  	Please select the lidar port:0
 
-  0. 115200
+  	0. 115200
 
-  1. 128000
+  	1. 128000
 
-  2. 153600
+  	2. 153600
 
-  3. 230400
+  	3. 230400
 
-  Please select the lidar baud rate:3
+  	Please select the lidar baud rate:3
 
-  0. false
+  	0. false
 
-  1. true
+  	1. true
 
-  Please select the lidar intensity:0
+  	Please select the lidar intensity:0
 
-  SDK Version: 1..3.7
+  	SDK Version: 1..3.7
 
-  LIDAR Version: 1.3.7
+  	LIDAR Version: 1.3.7
 
-  fhs_lock: creating lockfile:      18341
+  	fhs_lock: creating lockfile:      18341
 
-  firmware: 521
+  	firmware: 521
 
-  [YDLIDAR] Connection established in [/dev/ttyUSB0]:
+  	[YDLIDAR] Connection established in [/dev/ttyUSB0]:
 
-  Firmware version: 2.0.9
+  	Firmware version: 2.0.9
 
-  Hardware version: 2
+  	Hardware version: 2
 
-  Model: G4
+  	Model: G4
 
-  Serial: 2018042100000023
+  	Serial: 2018042100000023
 
-  [YDLIDAR INFO] Current Sampling Rate : 9K
+  	[YDLIDAR INFO] Current Sampling Rate : 9K
 
-  [YDLIDAR INFO] Current Scan Frequency : 7.000000Hz
+  	[YDLIDAR INFO] Current Scan Frequency : 7.000000Hz
 
-  received scan size: 1039
+  	received scan size: 1039
 
-  scan   system time: 1534400129245291000
+  	scan   system time: 1534400129245291000
 
-  scan     self time: 1534400129103710800
+  	scan     self time: 1534400129103710800
 
-  scan     frequency: 8.67053HZ
+  	scan     frequency: 8.67053HZ
 
-  received scan size: 1231
+  	received scan size: 1231
 
-  scan   system time: 1534400129379541000
+  	scan   system time: 1534400129379541000
 
-  scan     self time: 1534400129232496800
+  	scan     self time: 1534400129232496800
 
-  scan     frequency: 7.31708HZ
+  	scan     frequency: 7.31708HZ
 
-  received scan size: 1272
+  	received scan size: 1272
 
-  scan   system time: 1534400129530262000
+  	scan   system time: 1534400129530262000
 
-  scan     self time: 1534400129378863800
+  	scan     self time: 1534400129378863800
 
-  scan     frequency: 7.08105HZ
+  	scan     frequency: 7.08105HZ
 
-  received scan size: 1295
+  	received scan size: 1295
 
-  scan   system time: 1534400129671749000
+  	scan   system time: 1534400129671749000
 
-  scan     self time: 1534400129519748800
+  	scan     self time: 1534400129519748800
 
-  scan     frequency: 6.95518HZ
+  	scan     frequency: 6.95518HZ
 
-  ^Csignal_handler(2)
+  	^Csignal_handler(2)
 
-  received scan size: 1341
+  	received scan size: 1341
 
-  scan   system time: 1534400129839365000
+  	scan   system time: 1534400129839365000
 
-  scan     self time: 1534400129671106800
+  	scan     self time: 1534400129671106800
 
-  scan     frequency: 6.71642HZ
+  	scan     frequency: 6.71642HZ
 
-  fhs_unlock: Removing LockFile
+  	fhs_unlock: Removing LockFile
 
 
 

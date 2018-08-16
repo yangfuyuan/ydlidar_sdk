@@ -31,7 +31,6 @@
 #include <cstdint>
 #include <stdio.h>
 #include <stdlib.h>
-#include <io.h>
 #include <stddef.h>
 #include <string>
 #include <string.h>
@@ -39,6 +38,9 @@
 #include <cerrno>
 #include <stdexcept>
 #include <csignal>
+#if defined(_MSC_VER)
+#include <io.h>
+#endif
 
 #if !defined(_MSC_VER)
 #include <unistd.h>
