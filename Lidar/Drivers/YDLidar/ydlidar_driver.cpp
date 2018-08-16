@@ -179,8 +179,13 @@ namespace ydlidar{
                 }
             }
 
-            if(!found&&config_msg.serialPort != "/dev/ydlidar") {
-                throw DeviceException("The serial port is error. please check the serial port settigns. ");
+            if(!found) {
+                if(config_msg.serialPort != "/dev/ydlidar") {
+                    throw DeviceException("The serial port is error. please check the serial port settigns. ");
+                } else {
+                    cfg_.serialPort = config_msg.serialPort;
+                    restart = true;
+                }
             }
         }
 
@@ -1701,7 +1706,7 @@ namespace ydlidar{
         // make connection...
         result_t op_result = connect(cfg_.serialPort.c_str(), cfg_.serialBaudrate);
         if (op_result != RESULT_OK) {
-            fprintf(stderr, "[CYdLidar] Error, cannot bind to the specified serial port %s\n",  cfg_.serialPort.c_str() );
+            fprintf(stderr, "[YDLIDAR INFO] Error, cannot bind to the specified serial port %s\n",  cfg_.serialPort.c_str() );
             return false;
         }
 
