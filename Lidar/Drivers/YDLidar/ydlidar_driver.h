@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <atomic>
 #include <list>
+#include <map>
 #include <thread>
 #include <mutex>
 #include <condition_variable>
@@ -65,6 +66,13 @@ namespace ydlidar{
          virtual ~YDlidarDriver();
 
          /**
+          * @brief getLidarLists
+          * @return
+          */
+         std::vector<std::string> getLidarList();
+
+
+         /**
           * @brief UpdateLidarParamCfg
           * @param config_msg
           */
@@ -83,6 +91,13 @@ namespace ydlidar{
           */
          void spinOnce();
 
+
+
+         /**
+          * @brief lidarPortList
+          * @return
+          */
+         static std::vector<std::string> lidarPortList();
 
 
     private:
@@ -692,6 +707,8 @@ namespace ydlidar{
 
         LaserParamCfg cfg_; ///< configuration parameters
         size_t        node_counts; ///< laser point count
+
+        static std::map<std::string, std::string> lidar_map;
 
     private:
         LIDARDriverDataCallback   m_callback;

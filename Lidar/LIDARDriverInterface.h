@@ -27,6 +27,7 @@
 #pragma once
 
 #include <functional>
+#include <vector>
 #include "Utils.h"
 
 
@@ -41,6 +42,13 @@ class LIDARDriverInterface
     public:
         // Pure virtual functions driver writers must implement:
         virtual ~LIDARDriverInterface() {}
+
+
+        /**
+         * @brief get current lidar list
+         * @return current online lidar list
+         */
+        virtual std::vector<std::string> getLidarList() = 0;
         /**
          * @brief Update lidar configuration parameters
          * @param configuration parameters

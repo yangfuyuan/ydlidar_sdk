@@ -180,21 +180,77 @@ int main(int argc, char **argv) {
 
     }
 
+
+    std::vector<string> ports =  YDlidarDriver::lidarPortList();;
+    if(ports.size() == 1) {
+        if(cfg.serialPort != ports[0]) {
+            std::string str;
+            printf("Radar[%s] detected, whether to select current radar(yes/no)?:", ports[0].c_str());
+            std::cin>>str;
+            if(str.find("yes") != std::string::npos ||atoi(str.c_str()) == 1 ) {
+                cfg.serialPort = ports[0];
+            }
+        }
+    }
+
     if(input) {
         std::string port;
         std::string baudrate;
         std::string intensity;
-        printf("Please enter the lidar port:");
+        if(ports.empty()) {
+            std::cerr<<"Not radar"<<std::endl;
+            return 0;
+        }
+
+        int size = 0;
+        for(std::vector<string>::iterator it = ports.begin(); it != ports.end(); it++) {
+            printf("%d. %s\n", size, (*it).c_str());
+            size++;
+        }
+
+        select_port:
+        printf("Please select the lidar port:");
         std::cin>>port;
-        printf("Please enter the lidar baud rate:");
+        if((size_t)atoi(port.c_str()) >= ports.size()) {
+            printf("Invalid serial number, Please re-select\n");
+            goto select_port;
+        }
+        cfg.serialPort = ports[atoi(port.c_str())];
+
+        std::vector<unsigned int> baud;
+        baud.push_back(115200);
+        baud.push_back(128000);
+        baud.push_back(153600);
+        baud.push_back(230400);
+
+        for( unsigned int i = 0; i < baud.size(); i ++) {
+            printf("%u. %u\n", i, baud[i]);
+        }
+
+        select_baud:
+        printf("Please select the lidar baud rate:");
         std::cin>>baudrate;
 
-        printf("Please enter the lidar intensity:");
+        if(atoi(baudrate.c_str()) >= 4) {
+            printf("Invalid serial number, Please re-select\n");
+            goto select_baud;
+
+        }
+        cfg.serialBaudrate = baud[atoi(baudrate.c_str())];
+
+
+        printf("0. false\n");
+        printf("1. true\n");
+        select_intensity:
+        printf("Please select the lidar intensity:");
         std::cin>>intensity;
 
-        cfg.serialBaudrate = atoi(baudrate.c_str());
+        if(atoi(intensity.c_str()) >= 2) {
+            printf("Invalid serial number, Please re-select\n");
+            goto select_intensity;
+
+        }
         cfg.intensity = atoi(intensity.c_str()) ==0?false:true;
-        cfg.serialPort = port;
     }
 
     ini.SetValue("LIDAR", "serialPort", cfg.serialPort.c_str());
@@ -221,6 +277,7 @@ int main(int argc, char **argv) {
     try {
         LidarTest test(cfg);
         test.run();
+        ini.SaveFile(ini_file.c_str());
     }catch(TimeoutException& e) {
         std::cout << e.what()<< std::endl;
     }catch(CorruptedDataException& e) {
@@ -231,6 +288,5 @@ int main(int argc, char **argv) {
     }catch(...) {
         std::cout <<"Unkown error" << std::endl;
     }
-    ini.SaveFile(ini_file.c_str());
 	return 0;
 }

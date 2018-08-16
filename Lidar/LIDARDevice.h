@@ -54,6 +54,19 @@ class LIDAR : public LIDARDriverInterface
         void Clear() {
             m_LIDAR = nullptr;
         }
+
+        //////////////////////////////////////////////////////////////
+        /**
+         * @brief get current lidar lists
+         * @return current online lidar list
+         */
+        std::vector<std::string> getLidarList() {
+            if(m_LIDAR) {
+                return m_LIDAR->getLidarList();
+            } else {
+                throw DeviceException("error: no driver initialized!");
+            }
+        }
         //////////////////////////////////////////////////////////////
         /// \brief Update lidar configuration parameters
         /// \param configuration parameters

@@ -94,6 +94,9 @@ int main(int argc, char * argv[])
                 input = false;
                 const char * pszValue = ini.GetValue("LIDAR", "serialPort", "");
                 cfg.serialPort = pszValue;
+                if(cfg.serialPort.empty()) {
+                    input = true;
+                }
 
                 pszValue = ini.GetValue("LIDAR", "ignoreArray", "");
 
@@ -119,49 +122,107 @@ int main(int argc, char * argv[])
 
     }
 
-    if(input) {
-        std::string port;
-        std::string baudrate;
-        std::string intensity;
-        printf("Please enter the lidar port:");
-        std::cin>>port;
-        printf("Please enter the lidar baud rate:");
-        std::cin>>baudrate;
-
-        printf("Please enter the lidar intensity:");
-        std::cin>>intensity;
-
-        cfg.serialBaudrate = atoi(baudrate.c_str());
-        cfg.intensity = atoi(intensity.c_str()) ==0?false:true;
-        cfg.serialPort = port;
-    }
-
-    ini.SetValue("LIDAR", "serialPort", cfg.serialPort.c_str());
-
-    ini.SetLongValue("LIDAR", "serialBaudrate", cfg.serialBaudrate);
-    ini.SetLongValue("LIDAR", "sampleRate", cfg.sampleRate);
-    ini.SetLongValue("LIDAR", "scanFrequency", cfg.scanFrequency);
 
 
-    ini.SetBoolValue("LIDAR", "intensity", cfg.intensity);
-    ini.SetBoolValue("LIDAR", "autoReconnect", cfg.autoReconnect);
-    ini.SetBoolValue("LIDAR", "exposure", cfg.exposure);
-    ini.SetBoolValue("LIDAR", "fixedResolution", cfg.fixedResolution);
-    ini.SetBoolValue("LIDAR", "reversion", cfg.reversion);
-    ini.SetBoolValue("LIDAR", "heartBeat", cfg.heartBeat);
-
-    ini.SetDoubleValue("LIDAR", "maxAngle", cfg.maxAngle);
-    ini.SetDoubleValue("LIDAR", "minAngle", cfg.minAngle);
-    ini.SetDoubleValue("LIDAR", "maxRange", cfg.maxRange);
-    ini.SetDoubleValue("LIDAR", "minRange", cfg.minRange);
-
-    std::cout<<"SDK Version: "<< SDK_VERSION<<std::endl;
-    std::cout <<"LIDAR Version: "<< YDLIDAR_VERSION <<std::endl;
-
-
-
+    bool excep = false;
     try {
         LIDAR ydlidar;
+        std::vector<string> ports =  ydlidar.getLidarList();
+        if(ports.size() == 1) {
+            if(cfg.serialPort != ports[0]) {
+                std::string str;
+                printf("Radar[%s] detected, whether to select current radar(yes/no)?:", ports[0].c_str());
+                std::cin>>str;
+                if(str.find("yes") != std::string::npos ||atoi(str.c_str()) == 1 ) {
+                    cfg.serialPort = ports[0];
+                }
+            }
+        }
+
+
+        if(input) {
+            std::string port;
+            std::string baudrate;
+            std::string intensity;
+            if(ports.empty()) {
+                std::cerr<<"Not radar"<<std::endl;
+                return 0;
+            }
+
+            int size = 0;
+            for(std::vector<string>::iterator it = ports.begin(); it != ports.end(); it++) {
+                printf("%d. %s\n", size, (*it).c_str());
+                size++;
+            }
+
+            select_port:
+            printf("Please select the lidar port:");
+            std::cin>>port;
+            if(atoi(port.c_str()) >= ports.size()) {
+                printf("Invalid serial number, Please re-select\n");
+                goto select_port;
+            }
+            cfg.serialPort = ports[atoi(port.c_str())];
+
+            std::vector<unsigned int> baud;
+            baud.push_back(115200);
+            baud.push_back(128000);
+            baud.push_back(153600);
+            baud.push_back(230400);
+
+            for( unsigned int i = 0; i < baud.size(); i ++) {
+                printf("%u. %u\n", i, baud[i]);
+            }
+
+            select_baud:
+            printf("Please select the lidar baud rate:");
+            std::cin>>baudrate;
+
+            if(atoi(baudrate.c_str()) >= 4) {
+                printf("Invalid serial number, Please re-select\n");
+                goto select_baud;
+
+            }
+            cfg.serialBaudrate = baud[atoi(baudrate.c_str())];
+
+
+            printf("0. false\n");
+            printf("1. true\n");
+            select_intensity:
+            printf("Please select the lidar intensity:");
+            std::cin>>intensity;
+
+            if(atoi(intensity.c_str()) >= 2) {
+                printf("Invalid serial number, Please re-select\n");
+                goto select_intensity;
+
+            }
+            cfg.intensity = atoi(intensity.c_str()) ==0?false:true;
+        }
+
+        ini.SetValue("LIDAR", "serialPort", cfg.serialPort.c_str());
+
+        ini.SetLongValue("LIDAR", "serialBaudrate", cfg.serialBaudrate);
+        ini.SetLongValue("LIDAR", "sampleRate", cfg.sampleRate);
+        ini.SetLongValue("LIDAR", "scanFrequency", cfg.scanFrequency);
+
+
+        ini.SetBoolValue("LIDAR", "intensity", cfg.intensity);
+        ini.SetBoolValue("LIDAR", "autoReconnect", cfg.autoReconnect);
+        ini.SetBoolValue("LIDAR", "exposure", cfg.exposure);
+        ini.SetBoolValue("LIDAR", "fixedResolution", cfg.fixedResolution);
+        ini.SetBoolValue("LIDAR", "reversion", cfg.reversion);
+        ini.SetBoolValue("LIDAR", "heartBeat", cfg.heartBeat);
+
+        ini.SetDoubleValue("LIDAR", "maxAngle", cfg.maxAngle);
+        ini.SetDoubleValue("LIDAR", "minAngle", cfg.minAngle);
+        ini.SetDoubleValue("LIDAR", "maxRange", cfg.maxRange);
+        ini.SetDoubleValue("LIDAR", "minRange", cfg.minRange);
+
+        std::cout<<"SDK Version: "<< SDK_VERSION<<std::endl;
+        std::cout <<"LIDAR Version: "<< YDLIDAR_VERSION <<std::endl;
+
+
         ydlidar.RegisterLIDARDataCallback(&LaserScanCallback);
         ydlidar.UpdateLidarParamCfg(cfg);
 
@@ -175,20 +236,26 @@ int main(int argc, char * argv[])
                  std::cout<< e.what()<<std::endl;
 
              }catch(DeviceException& e) {
-                 std::cout<< e.what()<<std::endl;
+                 std::cerr<< e.what()<<std::endl;
+                 excep = true;
                  break;
              }
          }
 
     }catch(TimeoutException& e) {
         std::cout<< e.what()<<std::endl;
+        excep = true;
     }catch(CorruptedDataException& e) {
         std::cout<< e.what()<<std::endl;
+        excep = true;
     }catch(DeviceException& e) {
-        std::cout<< e.what()<<std::endl;
+        std::cerr<< e.what()<<std::endl;
+        excep = true;
     }
 
-    ini.SaveFile(ini_file.c_str());
+    if(!excep) {
+        ini.SaveFile(ini_file.c_str());
+    }
     return 0;
 
 

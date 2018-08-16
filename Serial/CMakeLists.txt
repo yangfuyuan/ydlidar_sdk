@@ -39,10 +39,10 @@ add_to_hal_sources(serial.cpp  )
 add_to_hal_headers( common.h serial.h)
 
 IF (WIN32)
-add_to_hal_sources(impl/windows/win_serial.cpp)
+add_to_hal_sources(impl/windows/win_serial.cpp impl/windows/list_ports_win.cpp)
 add_to_hal_headers(impl/windows/win.h  impl/windows/win_serial.h)
 ELSE()	
-add_to_hal_sources(impl/unix/unix_serial.cpp lock.c  )
+add_to_hal_sources(impl/unix/unix_serial.cpp impl/unix/list_ports_linux.cpp lock.c  )
 add_to_hal_headers(impl/unix/unix.h  impl/unix/unix_serial.h lock.h)
 ENDIF()
 

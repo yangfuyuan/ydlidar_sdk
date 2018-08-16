@@ -34,7 +34,12 @@
 #include <math.h>
 using namespace impl;
 
+
+
 namespace ydlidar{
+
+   std::map<std::string, std::string> YDlidarDriver::lidar_map;
+
 
 	YDlidarDriver::YDlidarDriver():
     _serial(0), m_callback(nullptr) {
@@ -125,6 +130,22 @@ namespace ydlidar{
 		return RESULT_OK;
 	}
 
+    std::vector<std::string> YDlidarDriver::getLidarList() {
+        return lidarPortList();
+    }
+
+    std::vector<std::string> YDlidarDriver::lidarPortList() {
+        std::vector<PortInfo> lst = list_ports();
+        lidar_map.clear();
+        std::vector<string> ports;
+        for(std::vector<PortInfo>::iterator it = lst.begin(); it != lst.end(); it++) {
+            std::string port = "ydlidar" + (*it).device_id;
+            ports.push_back(port);
+            lidar_map[port] = (*it).port;
+        }
+        return ports;
+    }
+
     void YDlidarDriver::UpdateLidarParamCfg(const LaserParamCfg &config_msg) {
         std::lock_guard<std::mutex>  lock(_cfg_lock);
         bool restart = false;
@@ -136,6 +157,33 @@ namespace ydlidar{
         if(config_msg.serialPort.empty()) {
             throw DeviceException("The serial port is empty. please check the serial port settigns. ");
         }
+
+        getLidarList();
+        std::map<std::string,std::string>::iterator it;
+        it = lidar_map.find(config_msg.serialPort);
+        bool found = false;
+        if(it != lidar_map.end()) {
+            if(cfg_.serialPort != it->second) {
+                restart = true;
+                cfg_.serialPort = it->second;
+            }
+        }else {
+            for(it = lidar_map.begin(); it != lidar_map.end(); it++) {
+                if(config_msg.serialPort == it->second) {
+                    if(cfg_.serialPort != it->second) {
+                        restart = true;
+                        cfg_.serialPort = it->second;
+                        found = true;
+                        break;
+                    }
+                }
+            }
+
+            if(!found) {
+                throw DeviceException("The serial port is error. please check the serial port settigns. ");
+            }
+        }
+
 
         cfg_.autoReconnect = config_msg.autoReconnect;
         cfg_.fixedResolution = config_msg.fixedResolution;
@@ -167,10 +215,7 @@ namespace ydlidar{
             cfg_.serialBaudrate = config_msg.serialBaudrate;
             restart = true;
         }
-        if(cfg_.serialPort != config_msg.serialPort) {
-            cfg_.serialPort = config_msg.serialPort;
-            restart = true;
-        }
+
         if(restart) {
             if(!checkComms()) {
                 throw DeviceException("Serial port is connection failed.");
