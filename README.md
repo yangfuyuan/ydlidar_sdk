@@ -1,7 +1,12 @@
+
+![YDLIDAR](image/index-X4.jpg  "YDLIDAR_X4")
+
+
+
 YDLIDAR SDK PACKAGE V1.3.7
 =====================================================================
 
-SDK [test](https://github.com/yangfuyuan/ydlidar_sdk) application for YDLIDAR
+SDK [test](https://github.com/yangfuyuan/ydlidar_sdk/tree/master/Samples) application for YDLIDAR
 
 Visit EAI Website for more details about [YDLIDAR](http://www.ydlidar.com/) .
 
@@ -15,6 +20,8 @@ How to build YDLIDAR SDK samples
     $ git checkout master
 
     $ cd ..
+    
+###Linux:
 
     $ mkdir build
 
@@ -22,75 +29,52 @@ How to build YDLIDAR SDK samples
 
     $ cmake ../ydlidar_sdk
 
-    $ make			###linux
+    $ make
 
 
 
-###windows:
+##Windows:
+
+###1. install [cmake](https://cmake.org/download/)(if there is no cmake)
 
 
-1. install [cmake](https://cmake.org/download/)
-
-2. build steps:
+###2. build steps:
 
 
-
-  step1: open cmake-gui and select source code/binaries directory
-
-  <p align="left">
-      <a href="https://github.com/yangfuyuan
-      " target="_blank"><img src="image/step1.png"
-      alt="IMAGE ALT TEXT HERE" width="388" height="365" border="10"/></a>
-  </p>
+####Step1: open cmake-gui and select source code/binaries directory
 
 
-
-  step2: Configure and select build toolchain
-
-  <p align="left">
-      <a href="https://github.com/yangfuyuan
-      " target="_blank"><img src="image/step2.png"
-      alt="IMAGE ALT TEXT HERE" width="388" height="365" border="10"/></a>
-  </p>
+![YDLIDAR](image/step1.png  "YDLIDAR")
 
 
-
-  step3: configuring done  
-
-  <p align="left">
-      <a href="https://github.com/yangfuyuan
-      " target="_blank"><img src="image/step3.png"
-      alt="IMAGE ALT TEXT HERE" width="388" height="365" border="10"/></a>
-  </p>         
+####Step2: Configure and select build toolchain(choose the VS version in your system)
 
 
-
-  step4: generate and done
-
-  <p align="left">
-      <a href="https://github.com/yangfuyuan
-      " target="_blank"><img src="image/step4.png"
-      alt="IMAGE ALT TEXT HERE" width="388" height="365" border="10"/></a>
-  </p>
+  ![YDLIDAR](image/step2.png  "YDLIDAR")
 
 
-
-  step5: open vs Project
-
-  <p align="left">
-      <a href="https://github.com/yangfuyuan
-      " target="_blank"><img src="image/step5.png"
-      alt="IMAGE ALT TEXT HERE" width="388" height="365" border="10"/></a>
-  </p>
+####Step3: configuring done(click "Configure" button)  
 
 
-  step6: build finished and run
+![YDLIDAR](image/step3.png  "YDLIDAR")
 
-   <p align="left">
-       <a href="https://github.com/yangfuyuan
-       " target="_blank"><img src="image/step6.png"
-       alt="IMAGE ALT TEXT HERE" width="488" height="365" border="10"/></a>
-   </p>
+
+####Step4: generating  done(click "Generate" button)  
+
+
+![YDLIDAR](image/step4.png  "YDLIDAR")
+
+
+####Step5: open vs Project in binaries directory
+
+
+![YDLIDAR](image/step5.png  "YDLIDAR")
+
+
+####Step6: build finished and run test:
+
+
+ ![YDLIDAR](image/step6.png  "YDLIDAR")
 
 
 
@@ -153,11 +137,14 @@ windows:
       1. true
 
     $ Please select the lidar intensity:0
-
+    
+    
+Console Display
 =====================================================================
 
 You should see YDLIDAR's scan result in the console:
-  YDLIDAR C++ TEST
+
+  	YDLIDAR C++ TEST
 
   	Radar[ydlidar7] detected, whether to select current radar(yes/no)?:yes
 
@@ -348,7 +335,7 @@ code:
 
 # Examples
 
-samples in the file test.cpp/test1.cpp.
+	samples in the file test.cpp/test1.cpp.
 
 ### SIMPLE USAGE
 
@@ -401,17 +388,24 @@ samples in the file test.cpp/test1.cpp.
     }
 ```
 
+### Get Lidar List
+```c++
+    std::vector<string> ports =  YDlidarDriver::lidarPortList();
+    for(std::vector<string>::iterator it = ports.begin(); it != ports.end(); it++) {
+            printf("%s\n",  (*it).c_str());
+     }
+```
 
-coordinate system
+
+Coordinate System
 =====================================================================
 
-<p align="middle">
-    <a href="https://github.com/yangfuyuan
-    " target="_blank"><img src="image/image.png"
-    alt="IMAGE ALT TEXT HERE" width="426" height="426" border="10"/></a>
-</p>
+![Coordinate](image/image.png  "Coordinate")
 
 
+
+###The relationship between the angle value and the data structure in the above figure:
+	double Angle =  scan.config.min_angle + index*scan.config.ang_increment;
 
 
 
@@ -420,4 +414,12 @@ Upgrade Log
 
 2018-08-14 version:1.3.7
 
-  1.update sdk interface function.
+  	1. update sdk interface function.
+  
+  	2. add get lidar port list.
+  
+  	3. support mutil-lidar binding port.
+  
+  	4. support for configuring radar parameters through ini file.
+  	
+  	5. the currend interface is not compatible with the old sdk.
