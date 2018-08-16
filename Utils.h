@@ -1,4 +1,4 @@
-/*****************************************************************************
+﻿/*****************************************************************************
 *  EAI TOF LIDAR DRIVER                                                      *
 *  Copyright (C) 2018 EAI TEAM  chushuifurong618@eaibot.com.                 *
 *                                                                            *
@@ -30,14 +30,19 @@
 #include <cstdlib>
 #include <cstdint>
 #include <stdio.h>
+#include <stdlib.h>
+#include <io.h>
 #include <stddef.h>
 #include <string>
 #include <string.h>
 #include <signal.h>
-#include <error.h>
+#include <cerrno>
 #include <stdexcept>
 #include <csignal>
+
+#if !defined(_MSC_VER)
 #include <unistd.h>
+#endif
 
 #if defined(_WIN32)
 #if defined(YDLIDAR_API_STATIC)

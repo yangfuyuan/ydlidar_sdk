@@ -46,7 +46,7 @@ endif()
 
 string(TOLOWER ${PROJECT_NAME} LIBRARY_NAME)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wno-inconsistent-missing-override -Wextra")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall")
 
 #############################################################################
 #option
@@ -207,6 +207,9 @@ target_link_libraries( ydlidar_driver ${HAL_LIBS} )
 target_link_libraries( ydlidar_driver_static ${HAL_LIBS} )
 
 IF (WIN32)
+target_link_libraries(ydlidar_driver setupapi)
+target_link_libraries(ydlidar_driver_static setupapi)
+
 ELSE()
 target_link_libraries(ydlidar_driver rt pthread)
 target_link_libraries(ydlidar_driver_static rt pthread)

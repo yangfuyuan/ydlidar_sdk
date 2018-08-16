@@ -1,4 +1,4 @@
-/*****************************************************************************
+﻿/*****************************************************************************
 *  EAI TOF LIDAR DRIVER                                                      *
 *  Copyright (C) 2018 EAI TEAM  chushuifurong618@eaibot.com.                 *
 *                                                                            *
@@ -26,6 +26,7 @@
 *****************************************************************************/
 #ifdef _WIN32
 # pragma warning(disable: 4786)
+#pragma  comment(lib, "ydlidar_driver.lib")
 #endif
 #include <iostream>
 #include <iterator>

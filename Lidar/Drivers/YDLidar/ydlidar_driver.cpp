@@ -1,4 +1,4 @@
-/*****************************************************************************
+﻿/*****************************************************************************
 *  EAI TOF LIDAR DRIVER                                                      *
 *  Copyright (C) 2018 EAI TEAM  chushuifurong618@eaibot.com.                 *
 *                                                                            *
@@ -42,7 +42,7 @@ namespace ydlidar{
 
 
 	YDlidarDriver::YDlidarDriver():
-    _serial(0), m_callback(nullptr) {
+    _serial(nullptr), m_callback(nullptr) {
 		isConnected = false;
 		isScanning = false;
         //serial parameters
@@ -248,6 +248,7 @@ namespace ydlidar{
             }
             delay(1000);
         }
+        printf("start scanning.....\n");
 
         setAutoReconnect(cfg_.autoReconnect);
 
@@ -614,14 +615,16 @@ namespace ydlidar{
         int timeout_count = 0;
 
 		while(isScanning) {
+
 			if ((ans=waitScanData(local_buf, count)) != RESULT_OK) {
                 if (ans != RESULT_TIMEOUT || timeout_count>5) {
                     if(!isAutoReconnect) {//
                         fprintf(stderr, "exit scanning thread!!\n");
                         {
-            		    unique_lock lock(_lock);
+
+                            unique_lock lock(_lock);
                             isScanning = false;
-            		    cond_.notify_one();
+                            cond_.notify_one();
                         }
                         throw DeviceException("wait scan data error for serial exception. exit scanning thread");
                     } else {//
@@ -668,7 +671,7 @@ namespace ydlidar{
 			for (size_t pos = 0; pos < count; ++pos) {
                 if (local_buf[pos].sync_flag & LIDAR_RESP_MEASUREMENT_SYNCBIT) {
                     if ((local_scan[0].sync_flag & LIDAR_RESP_MEASUREMENT_SYNCBIT)) {  
-                        unique_lock lock(_lock);
+						_lock.lock();
                         memcpy(scan_node_buf, local_scan, scan_count*sizeof(node_info));
                         scan_node_count = scan_count;
                         _lock.unlock();

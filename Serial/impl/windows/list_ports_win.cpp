@@ -22,6 +22,8 @@ using std::string;
 static const DWORD port_name_max_length = 256;
 static const DWORD friendly_name_max_length = 256;
 static const DWORD hardware_id_max_length = 256;
+static const DWORD device_id_max_length = 256;
+
 
 // Convert a wide Unicode string to an UTF8 string
 std::string utf8_encode(const std::wstring &wstr)
@@ -126,22 +128,54 @@ serial::list_ports()
 		else
 			hardware_id[0] = '\0';
 
+        TCHAR device_id[device_id_max_length];
+        DWORD device_id_actual_length = 0;
+
+        BOOL got_device_id = SetupDiGetDeviceRegistryProperty(
+                    device_info_set,
+                    &device_info_data,
+                    SPDRP_LOCATION_INFORMATION,
+                    NULL,
+                    (PBYTE)device_id,
+                    device_id_max_length,
+                    &device_id_actual_length);
+
+        if(got_device_id == TRUE && device_id_actual_length > 0)
+            device_id[device_id_actual_length-1] = '\0';
+        else
+            device_id[0] = '\0';
+
+
+
 		#ifdef UNICODE
 			std::string portName = utf8_encode(port_name);
 			std::string friendlyName = utf8_encode(friendly_name);
 			std::string hardwareId = utf8_encode(hardware_id);
+            std::string deviceId = utf8_encode(device_id);
+
 		#else
 			std::string portName = port_name;
 			std::string friendlyName = friendly_name;
 			std::string hardwareId = hardware_id;
+            std::string deviceId = device_id;
 		#endif
+            size_t pos = deviceId.find("#");
+            if( pos != std::string::npos) {
+                deviceId = deviceId.substr(pos+1, 4);
+                deviceId = std::to_string(atoi(deviceId.c_str()));
+            }
 
-		PortInfo port_entry;
-		port_entry.port = portName;
-		port_entry.description = friendlyName;
-		port_entry.hardware_id = hardwareId;
+            if( hardwareId.find("VID_10C4&PID_EA60") != std::string::npos) {
+                PortInfo port_entry;
+                port_entry.port = portName;
+                port_entry.description = friendlyName;
+                port_entry.hardware_id = hardwareId;
+                port_entry.device_id = deviceId;
+                devices_found.push_back(port_entry);
 
-		devices_found.push_back(port_entry);
+            }
+
+
 	}
 
 	SetupDiDestroyDeviceInfoList(device_info_set);
