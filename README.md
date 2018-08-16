@@ -89,7 +89,7 @@ How to build YDLIDAR SDK samples
    <p align="left">
        <a href="https://github.com/yangfuyuan
        " target="_blank"><img src="image/step6.png"
-       alt="IMAGE ALT TEXT HERE" width="388" height="365" border="10"/></a>
+       alt="IMAGE ALT TEXT HERE" width="488" height="365" border="10"/></a>
    </p>
 
 
@@ -123,8 +123,7 @@ linux:
 
       1. true
 
-   $ Please select the lidar intensity:0
-
+    $ Please select the lidar intensity:0
 
 
 windows:
