@@ -24,7 +24,59 @@ How to build YDLIDAR SDK samples
 
     $ make			###linux
 
-    $ vs open Project.sln	###windows
+    windows:
+
+          1. install [cmake](https://cmake.org/download/)
+
+          2. build step:
+
+            step1: open cmake-gui and select source code/binaries directory
+
+            <p align="left">
+                <a href="https://github.com/yangfuyuan
+                " target="_blank"><img src="image/step1.png"
+                alt="IMAGE ALT TEXT HERE" width="388" height="365" border="10"/></a>
+            </p>
+
+            step2: Configure and select build toolchain
+
+            <p align="left">
+                <a href="https://github.com/yangfuyuan
+                " target="_blank"><img src="image/step2.png"
+                alt="IMAGE ALT TEXT HERE" width="388" height="365" border="10"/></a>
+            </p>
+
+            step3: configuring done             
+
+            <p align="left">
+                <a href="https://github.com/yangfuyuan
+                " target="_blank"><img src="image/step3.png"
+                alt="IMAGE ALT TEXT HERE" width="388" height="365" border="10"/></a>
+            </p>
+
+            step4: generate and done
+
+            <p align="left">
+                <a href="https://github.com/yangfuyuan
+                " target="_blank"><img src="image/step4.png"
+                alt="IMAGE ALT TEXT HERE" width="388" height="365" border="10"/></a>
+            </p>
+
+            step1: open vs Project
+
+            <p align="left">
+                <a href="https://github.com/yangfuyuan
+                " target="_blank"><img src="image/step5.png"
+                alt="IMAGE ALT TEXT HERE" width="388" height="365" border="10"/></a>
+            </p>
+
+            step1: build finished ang run
+
+            <p align="left">
+                <a href="https://github.com/yangfuyuan
+                " target="_blank"><img src="image/step6.png"
+                alt="IMAGE ALT TEXT HERE" width="388" height="365" border="10"/></a>
+            </p>
 
 How to run YDLIDAR SDK samples
 =====================================================================
@@ -33,40 +85,93 @@ linux:
 
     $ ./ydlidar_test
 
-    $ Please enter the lidar port:/dev/ttyUSB0
+      YDLIDAR C++ TEST
 
-    $ Please enter the lidar baud rate:115200
+       Radar[ydlidar7] detected, whether to select current radar(yes/no)?:yes
 
-    $ Please enter the lidar intensity:0
+       0. ydlidar7
+
+    $ Please select the lidar port:0
+
+      0. 115200
+
+      1. 128000
+
+      2. 153600
+
+      3. 230400
+
+    $ Please select the lidar baud rate:3
+
+      0. false
+
+      1. true
+
+   $ Please select the lidar intensity:0
+
 
 
 windows:
 
     $ ydlidar_test.exe
 
-    $ Please enter the lidar port:COM3
+      YDLIDAR C++ TEST
 
-    $ Please enter the lidar baud rate:115200
+       Radar[ydlidar7] detected, whether to select current radar(yes/no)?:yes
 
-    $ Please enter the lidar intensity:0
+       0. ydlidar7
+
+    $ Please select the lidar port:0
+
+      0. 115200
+
+      1. 128000
+
+      2. 153600
+
+      3. 230400
+
+    $ Please select the lidar baud rate:3
+
+      0. false
+
+      1. true
+
+   $ Please select the lidar intensity:0
 
 =====================================================================
 
 You should see YDLIDAR's scan result in the console:
 
- YDLIDAR C++ TEST
+YDLIDAR C++ TEST
 
-Please enter the lidar port:/dev/ttyUSB0
+Radar[ydlidar7] detected, whether to select current radar(yes/no)?:yes
 
-Please enter the lidar baud rate:230400
+0. ydlidar7
 
-Please enter the lidar intensity:0
+Please select the lidar port:0
+
+0. 115200
+
+1. 128000
+
+2. 153600
+
+3. 230400
+
+Please select the lidar baud rate:3
+
+0. false
+
+1. true
+
+Please select the lidar intensity:0
 
 SDK Version: 1..3.7
 
 LIDAR Version: 1.3.7
 
-fhs_lock: creating lockfile:      14323
+fhs_lock: creating lockfile:      18341
 
 firmware: 521
 
@@ -78,35 +183,56 @@ Hardware version: 2
 
 Model: G4
 
-Serial: 2018041900000040
+Serial: 2018042100000023
 
 [YDLIDAR INFO] Current Sampling Rate : 9K
 
 [YDLIDAR INFO] Current Scan Frequency : 7.000000Hz
 
-Get Lidar data timeout
+received scan size: 1039
 
-received data sample size:1195
+scan   system time: 1534400129245291000
 
-frame timestamp is:1534228901618879800
+scan     self time: 1534400129103710800
 
-received timestamp is:1534228901742776000
+scan     frequency: 8.67053HZ
 
-received data sample size:1203
+received scan size: 1231
 
-frame timestamp is:1534228901741838800
+scan   system time: 1534400129379541000
 
-received timestamp is:1534228901876750000
+scan     self time: 1534400129232496800
+
+scan     frequency: 7.31708HZ
+
+received scan size: 1272
+
+scan   system time: 1534400129530262000
+
+scan     self time: 1534400129378863800
+
+scan     frequency: 7.08105HZ
+
+received scan size: 1295
+
+scan   system time: 1534400129671749000
+
+scan     self time: 1534400129519748800
+
+scan     frequency: 6.95518HZ
 
 ^Csignal_handler(2)
 
-received data sample size:1957
+received scan size: 1341
 
-frame timestamp is:1534228901875864800
+scan   system time: 1534400129839365000
 
-received timestamp is:1534228902127891000
+scan     self time: 1534400129671106800
+
+scan     frequency: 6.71642HZ
 
 fhs_unlock: Removing LockFile
+
 
 
 
@@ -193,7 +319,7 @@ code:
     	  std::cout<< "scan     frequency: "<< 1000000000.0/scan.config.scan_time << "HZ"<<std::endl;
 
           for(size_t i =0; i < scan.ranges.size(); i++) {
-            
+
             // current angle
             double angle = scan.config.min_angle + i*scan.config.ang_increment;
 
@@ -269,7 +395,7 @@ coordinate system
 
 <p align="middle">
     <a href="https://github.com/yangfuyuan
-    " target="_blank"><img src="image.png"
+    " target="_blank"><img src="image/image.png"
     alt="IMAGE ALT TEXT HERE" width="426" height="426" border="10"/></a>
 </p>
 
