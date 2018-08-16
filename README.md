@@ -26,13 +26,14 @@ How to build YDLIDAR SDK samples
 
 
 
-windows:
+##windows:
 
-    1. install [cmake](https://cmake.org/download/)
 
-    2. build steps:
+1. install [cmake](https://cmake.org/download/)
 
-    step1: open cmake-gui and select source code/binaries directory
+2. build steps:
+
+  step1: open cmake-gui and select source code/binaries directory
 
     <p align="left">
         <a href="https://github.com/yangfuyuan
@@ -42,7 +43,7 @@ windows:
 
 
 
-    step2: Configure and select build toolchain
+  step2: Configure and select build toolchain
 
     <p align="left">
         <a href="https://github.com/yangfuyuan
@@ -52,7 +53,7 @@ windows:
 
 
 
-    step3: configuring done  
+  step3: configuring done  
 
     <p align="left">
         <a href="https://github.com/yangfuyuan
@@ -62,7 +63,7 @@ windows:
 
 
 
-    step4: generate and done
+  step4: generate and done
 
     <p align="left">
         <a href="https://github.com/yangfuyuan
@@ -72,14 +73,13 @@ windows:
 
 
 
-    step5: open vs Project
+  step5: open vs Project
 
     <p align="left">
         <a href="https://github.com/yangfuyuan
         " target="_blank"><img src="image/step5.png"
         alt="IMAGE ALT TEXT HERE" width="388" height="365" border="10"/></a>
     </p>
-
 
 
    step6: build finished and run
