@@ -179,7 +179,7 @@ namespace ydlidar{
                 }
             }
 
-            if(!found) {
+            if(!found&&config_msg.serialPort != "/dev/ydlidar") {
                 throw DeviceException("The serial port is error. please check the serial port settigns. ");
             }
         }
