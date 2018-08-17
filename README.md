@@ -21,13 +21,13 @@ How to build YDLIDAR SDK samples
 
     $ cd ..
     
-###Linux:
+##Linux:
 
     $ mkdir build
 
     $ cd build
 
-    $ cmake ../ydlidar_sdk
+    $ cmake ../ydlidar_sdk   ##windows: cmake -G "Visual Studio 14 2017 Win64" ../ydlidar_sdk 
 
     $ make
 
@@ -77,7 +77,13 @@ How to build YDLIDAR SDK samples
  ![YDLIDAR](image/step6.png  "YDLIDAR")
 
 
-
+##3.Compile wth Qt:
+### 1). Qt configuration cmake
+### 2). Open the CmakeLists.txt project file with Qt.
+	
+	
+	
+	
 How to run YDLIDAR SDK samples
 =====================================================================
 
@@ -333,9 +339,17 @@ code:
         }
 
 
-# Examples
+Quick Start
+-----------
 
-	samples in the file test.cpp/test1.cpp.
+The best way to learn how to use sdk is to follow the tutorials in our
+sdk guide:
+
+https://github.com/yangfuyuan/ydlidar_sdk/Samples
+
+If you want to learn from code examples, take a look at the examples in the
+[Samples](Samples) directory.
+
 
 ### SIMPLE USAGE
 
@@ -390,10 +404,15 @@ code:
 
 ### Get Lidar List
 ```c++
+
     std::vector<string> ports =  YDlidarDriver::lidarPortList();
+    
     for(std::vector<string>::iterator it = ports.begin(); it != ports.end(); it++) {
+    
             printf("%s\n",  (*it).c_str());
+            
      }
+     
 ```
 
 
@@ -405,6 +424,7 @@ Coordinate System
 
 
 ###The relationship between the angle value and the data structure in the above figure:
+
 	double Angle =  scan.config.min_angle + index*scan.config.ang_increment;
 
 
