@@ -312,10 +312,10 @@ example:
     for(size_t i =0; i < scan.ranges.size(); i++) {
 
       // current angle
-      double angle = scan.config.min_angle + i*scan.config.ang_increment;
+      double angle = scan.config.min_angle + i*scan.config.ang_increment;// radian format
 
       //current distance
-      double distance = scan.ranges[i];
+      double distance = scan.ranges[i];//meter
 
       //current intensity
       int intensity = scan.intensities[i];
@@ -337,10 +337,10 @@ code:
           for(size_t i =0; i < scan.ranges.size(); i++) {
 
             // current angle
-            double angle = scan.config.min_angle + i*scan.config.ang_increment;
+            double angle = scan.config.min_angle + i*scan.config.ang_increment;// radian format
 
             //current distance
-            double distance = scan.ranges[i];
+            double distance = scan.ranges[i];//meter
 
             //current intensity
             int intensity = scan.intensities[i];
@@ -436,7 +436,8 @@ Coordinate System
 
 ###The relationship between the angle value and the data structure in the above figure:
 
-	double Angle =  scan.config.min_angle + index*scan.config.ang_increment;
+	double current_angle =  scan.config.min_angle + index*scan.config.ang_increment;// radian format
+	doube Angle = current_angle*180/M_PI;//Angle fomat
 
 
 
