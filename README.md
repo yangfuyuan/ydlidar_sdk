@@ -1,19 +1,38 @@
 
 ![YDLIDAR](image/index-X4.jpg  "YDLIDAR_X4")
 
-
-
-YDLIDAR SDK PACKAGE V1.3.7
+YDLIDAR SDK [![Build Status](https://travis-ci.org/cansik/ydlidar_sdk.svg?branch=master)](https://travis-ci.org/cansik/ydlidar_sdk) [![Build status](https://ci.appveyor.com/api/projects/status/2w9xm1dbafbi7xc0?svg=true)](https://ci.appveyor.com/project/cansik/ydlidar_sdk) [![codebeat badge](https://codebeat.co/badges/3d8634b7-84eb-410c-b92b-24bf6875d8ef)](https://codebeat.co/projects/github-com-cansik-ydlidar_sdk-master)
 =====================================================================
 
-SDK [test](https://github.com/yangfuyuan/ydlidar_sdk/tree/master/Samples) application for YDLIDAR
 
-Visit EAI Website for more details about [YDLIDAR](http://www.ydlidar.com/) .
+Introduction
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+
+YDLIDAR(https://www.ydlidar.com/) series is a set of high-performance and low-cost LIDAR sensors, which is the perfect sensor of 2D SLAM, 3D reconstruction, multi-touch, and safety applications.
+
+If you are using ROS (Robot Operating System), please use our open-source [ROS Driver]( https://github.com/yangfuyuan/ydlidar_ros) .
+
+Release Notes
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+| Title      |  Version |  Data |
+| :-------- | --------:|  :--: |
+| SDK     |  1.3.7 |   2018-8-14  |
 
 
-Support LIDAR MODEL(Only S4Pro support intensity)
-=====================================================================
-| MODEL      |  Baudrate |  Sampling Frequency | Range(m)  | Scanning Frequency(HZ) | Working temperature(°C) | Laser power max(mW) | voltage(V) | Current(mA)
+- [new feature] support mutil-lidar binding port.
+- [new feature] support ini format configuration paramters.
+- [new feature] Get online Lidar list.
+- [Optimization] Simplified interface.
+
+
+
+Dataset 
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Support LIDAR Model(Only S4Pro support intensity)
+
+
+| Model      |  Baudrate |  Sampling Frequency | Range(m)  | Scanning Frequency(HZ) | Working temperature(°C) | Laser power max(mW) | voltage(V) | Current(mA)
 | :-------- | --------:|--------:|  --------:| --------:|--------:| --------:| --------:|  :--: |
 | G4     |  230400 |   9000  |  0.26-16   |5-12|0-50| ~5|4.8-5.2|400-480|
 | X4     |  128000 |   5000  |  0.12-10   |5-12|0-40| ~5|4.8-5.2|330-380|
@@ -22,7 +41,7 @@ Support LIDAR MODEL(Only S4Pro support intensity)
 | S4Pro |  153600|    4000 |  0.1-8        |6-12|0-40| ~5|4.8-5.2|330-380|
 
 How to build YDLIDAR SDK samples
-=====================================================================
+-------------------------------------------------------------------------------------------------------------------------------------------------------
 
     $ git clone https://github.com/yangfuyuan/ydlidar_sdk
 
@@ -32,7 +51,7 @@ How to build YDLIDAR SDK samples
 
     $ cd ..
     
-##Linux:
+Linux:
 
     $ mkdir build
 
@@ -44,59 +63,59 @@ How to build YDLIDAR SDK samples
 
 
 
-##Windows:
+Windows:
 
-###1. install [cmake](https://cmake.org/download/)(if there is no cmake)
-
-
-###2. build steps:
+1. install [cmake](https://cmake.org/download/)(if there is no cmake)
 
 
-####Step1: open cmake-gui and select source code/binaries directory
+2. build steps:
+
+
+Step1: open cmake-gui and select source code/binaries directory
 
 
 ![YDLIDAR](image/step1.png  "YDLIDAR")
 
 
-####Step2: Configure and select build toolchain(choose the VS version in your system)
+Step2: Configure and select build toolchain(choose the VS version in your system)
 
 
   ![YDLIDAR](image/step2.png  "YDLIDAR")
 
 
-####Step3: configuring done(click "Configure" button)  
+Step3: configuring done(click "Configure" button)  
 
 
 ![YDLIDAR](image/step3.png  "YDLIDAR")
 
 
-####Step4: generating  done(click "Generate" button)  
+Step4: generating  done(click "Generate" button)  
 
 
-![YDLIDAR](/home/yang/LASER/ydlidar_sdk/image/step4.png  "YDLIDAR")
+![YDLIDAR](image/step4.png  "YDLIDAR")
 
 
-####Step5: open vs Project in binaries directory
+Step5: open vs Project in binaries directory
 
 
 ![YDLIDAR](image/step5.png  "YDLIDAR")
 
 
-####Step6: build finished and run test:
+Step6: build finished and run test:
 
 
  ![YDLIDAR](image/step6.png  "YDLIDAR")
 
 
-##3.Compile wth Qt:
-### 1). Qt configuration cmake
-### 2). Open the CmakeLists.txt project file with Qt.
+3. Compile wth Qt:
+1). Qt configuration cmake
+2). Open the CmakeLists.txt project file with Qt.
 	
 	
 	
 	
 How to run YDLIDAR SDK samples
-=====================================================================
+-------------------------------------------------------------------------------------------------------------------------------------------------------
 
 linux:
 
@@ -156,8 +175,7 @@ windows:
     $ Please select the lidar intensity:0
     
     
-Console Display
-=====================================================================
+Console Display:
 
 You should see YDLIDAR's scan result in the console:
 
@@ -252,9 +270,10 @@ You should see YDLIDAR's scan result in the console:
   	fhs_unlock: Removing LockFile
 
 
+Note: If you have already run the program once. change the configuration parameters through the "lidar.ini" file.
 
-Lidar point data structure
-=====================================================================
+Data structure
+-------------------------------------------------------------------------------------------------------------------------------------------------------
 
 data structure:
 
@@ -307,7 +326,7 @@ data structure:
 
       };
 
-example:
+example angle parsing:
 
     for(size_t i =0; i < scan.ranges.size(); i++) {
 
@@ -315,14 +334,14 @@ example:
       double angle = scan.config.min_angle + i*scan.config.ang_increment;// radian format
 
       //current distance
-      double distance = scan.ranges[i];//meter
+      double distance = scan.ranges[i];//meters
 
       //current intensity
       int intensity = scan.intensities[i];
 
     }
 
-code:
+laser callback function code :
 
       void LaserScanCallback(const LaserScan& scan) {
 
@@ -340,7 +359,7 @@ code:
             double angle = scan.config.min_angle + i*scan.config.ang_increment;// radian format
 
             //current distance
-            double distance = scan.ranges[i];//meter
+            double distance = scan.ranges[i];//meters
 
             //current intensity
             int intensity = scan.intensities[i];
@@ -362,7 +381,7 @@ If you want to learn from code examples, take a look at the examples in the
 [Samples](Samples) directory.
 
 
-### SIMPLE USAGE
+### Simple Usage
 
 ```c++
     try {
@@ -413,7 +432,11 @@ If you want to learn from code examples, take a look at the examples in the
     }
 ```
 
-### Get Lidar List
+Note: Use sdk to be a "try catch" syntax to do exception handling.
+
+
+### Get Lidar List:
+
 ```c++
 
     std::vector<string> ports =  YDlidarDriver::lidarPortList();
@@ -428,30 +451,20 @@ If you want to learn from code examples, take a look at the examples in the
 
 
 Coordinate System
-=====================================================================
+-------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ![Coordinate](image/image.png  "Coordinate")
 
 
 
-###The relationship between the angle value and the data structure in the above figure:
+### The relationship between the angle value and the data structure in the above figure:
 
 	double current_angle =  scan.config.min_angle + index*scan.config.ang_increment;// radian format
 	doube Angle = current_angle*180/M_PI;//Angle fomat
 
 
+Contact EAI
+---------------
 
-Upgrade Log
-=====================================================================
+If you have any extra questions, please feel free to [contact us](http://www.ydlidar.cn/cn/contact)
 
-2018-08-14 version:1.3.7
-
-  	1. update sdk interface function.
-  
-  	2. add get lidar port list.
-  
-  	3. support mutil-lidar binding port.
-  
-  	4. support for configuring radar parameters through ini file.
-  	
-  	5. the currend interface is not compatible with the old sdk.
