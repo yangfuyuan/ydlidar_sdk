@@ -181,17 +181,18 @@ namespace ydlidar{
 
             if(!found) {
                 if(config_msg.serialPort != "/dev/ydlidar") {
-                    throw DeviceException("The serial port is error. please check the serial port settigns. ");
-                } else {
                     size_t pos = config_msg.serialPort.find("/dev/ttyS");
                     size_t pos1 = config_msg.serialPort.find("/dev/ttyACM");
-                    if(pos != std::string::npos || pos1 != std::string::npos) {
+					size_t pos2 = config_msg.serialPort.find("/dev/ttyH");
+                    if(pos != std::string::npos || pos1 != std::string::npos || pos2 != std::string::npos) {
                         cfg_.serialPort = config_msg.serialPort;
                         restart = true;
                     }else {
                         throw DeviceException("The serial port is error. please check the serial port settigns. ");
                     }
-
+                } else {
+					cfg_.serialPort = config_msg.serialPort;
+                    restart = true;
                 }
             }
         }
