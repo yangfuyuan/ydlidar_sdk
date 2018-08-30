@@ -126,6 +126,7 @@ int main(int argc, char * argv[])
 
 
     bool excep = false;
+    bool input_port =false;
     try {
         LIDAR ydlidar;
         std::vector<string> ports =  ydlidar.getLidarList();
@@ -134,8 +135,13 @@ int main(int argc, char * argv[])
                 std::string str;
                 printf("Radar[%s] detected, whether to select current radar(yes/no)?:", ports[0].c_str());
                 std::cin>>str;
+                for (int i=0; i <str.size(); i++)
+                   str[i] = tolower(str[i]);
                 if(str.find("yes") != std::string::npos ||atoi(str.c_str()) == 1 ) {
                     cfg.serialPort = ports[0];
+                    input_port = true;
+                }else{
+                    return 0;
                 }
             }
         }
@@ -146,24 +152,34 @@ int main(int argc, char * argv[])
             std::string baudrate;
             std::string intensity;
             if(ports.empty()) {
-                std::cerr<<"Not radar"<<std::endl;
-                return 0;
+                printf("Not radar delected, Please enter the radar port manually: ");
+                std::cin>>port;
+                cfg.serialPort = port;
+                input_port = true;
             }
 
-            int size = 0;
-            for(std::vector<string>::iterator it = ports.begin(); it != ports.end(); it++) {
-                printf("%d. %s\n", size, (*it).c_str());
-                size++;
+
+            if(!input_port) {
+
+                int size = 0;
+                for(std::vector<string>::iterator it = ports.begin(); it != ports.end(); it++) {
+                    printf("%d. %s\n", size, (*it).c_str());
+                    size++;
+                }
+
+
+                select_port:
+                printf("Please select the lidar port:");
+                std::cin>>port;
+                if(atoi(port.c_str()) >= ports.size()) {
+                    printf("Invalid serial number, Please re-select\n");
+                    goto select_port;
+                }
+                cfg.serialPort = ports[atoi(port.c_str())];
+
             }
 
-            select_port:
-            printf("Please select the lidar port:");
-            std::cin>>port;
-            if(atoi(port.c_str()) >= ports.size()) {
-                printf("Invalid serial number, Please re-select\n");
-                goto select_port;
-            }
-            cfg.serialPort = ports[atoi(port.c_str())];
+
 
             std::vector<unsigned int> baud;
             baud.push_back(115200);
