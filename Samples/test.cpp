@@ -84,6 +84,7 @@ int main(int argc, char * argv[])
     ini.SetUnicode();
     LaserParamCfg cfg;
     bool input = true;
+    uint8_t driver_type = 0;
     std::string ini_file = "lidar.ini";
     bool ini_exist = fileExists(ini_file.c_str());
     if(ini_exist ||  argc > 1) {
@@ -98,10 +99,10 @@ int main(int argc, char * argv[])
                 if(cfg.serialPort.empty()) {
                     input = true;
                 }
-
                 pszValue = ini.GetValue("LIDAR", "ignoreArray", "");
 
                 cfg.ignoreArray = split(pszValue,',');
+
 
                 cfg.serialBaudrate = ini.GetLongValue("LIDAR", "serialBaudrate", cfg.serialBaudrate);
                 cfg.sampleRate = ini.GetLongValue("LIDAR", "sampleRate", cfg.sampleRate);
@@ -113,6 +114,8 @@ int main(int argc, char * argv[])
                 cfg.fixedResolution = ini.GetBoolValue("LIDAR", "fixedResolution", cfg.fixedResolution);
                 cfg.reversion = ini.GetBoolValue("LIDAR", "reversion", cfg.reversion);
                 cfg.heartBeat = ini.GetBoolValue("LIDAR", "heartBeat", cfg.heartBeat);
+                driver_type =  ini.GetBoolValue("LIDAR", "driver_serial_type", true)?0:1;
+
 
                 cfg.maxAngle = ini.GetDoubleValue("LIDAR", "maxAngle", cfg.maxAngle);
                 cfg.minAngle = ini.GetDoubleValue("LIDAR", "minAngle", cfg.minAngle);
@@ -128,7 +131,7 @@ int main(int argc, char * argv[])
     bool excep = false;
     bool input_port =false;
     try {
-        LIDAR ydlidar;
+        LIDAR ydlidar(driver_type);
         std::vector<string> ports =  ydlidar.getLidarList();
         if(ports.size() == 1) {
             if(cfg.serialPort != ports[0]) {
@@ -166,7 +169,6 @@ int main(int argc, char * argv[])
                     printf("%d. %s\n", size, (*it).c_str());
                     size++;
                 }
-
 
                 select_port:
                 printf("Please select the lidar port:");
@@ -230,6 +232,7 @@ int main(int argc, char * argv[])
         ini.SetBoolValue("LIDAR", "fixedResolution", cfg.fixedResolution);
         ini.SetBoolValue("LIDAR", "reversion", cfg.reversion);
         ini.SetBoolValue("LIDAR", "heartBeat", cfg.heartBeat);
+        ini.SetBoolValue("LIDAR", "driver_serial_type", !driver_type);
 
         ini.SetDoubleValue("LIDAR", "maxAngle", cfg.maxAngle);
         ini.SetDoubleValue("LIDAR", "minAngle", cfg.minAngle);

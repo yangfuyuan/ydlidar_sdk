@@ -41,8 +41,8 @@ namespace ydlidar{
    std::map<std::string, std::string> YDlidarDriver::lidar_map;
 
 
-	YDlidarDriver::YDlidarDriver():
-    _serial(nullptr), m_callback(nullptr) {
+    YDlidarDriver::YDlidarDriver(uint8_t drivertype):
+    _serial(nullptr), m_callback(nullptr), m_driver_type(drivertype) {
 		isConnected = false;
 		isScanning = false;
         //serial parameters
@@ -114,7 +114,18 @@ namespace ydlidar{
         serial_port = string(port_path);
         std::lock_guard<std::mutex> lck(_serial_lock);
 		if(!_serial){
-			_serial = new serial::Serial(port_path, _baudrate, serial::Timeout::simpleTimeout(DEFAULT_TIMEOUT));
+            switch (m_driver_type) {
+            case DRIVER_TYPE_SERIALPORT:
+                _serial = new Serial();
+                _serial->bind(port_path, _baudrate);
+
+                break;
+            case DRIVER_TYPE_TCP:
+                _serial = new CActiveSocket();
+                _serial->bind(port_path, baudrate);
+            default:
+                break;
+            }
 		}
 
 		{
@@ -529,7 +540,7 @@ namespace ydlidar{
 		}
 		size_t r;
         while (size) {
-            r = _serial->write(data, size);
+            r = _serial->writedata(data, size);
             if( r < 1) {
                 return RESULT_FAIL;
             }
@@ -546,7 +557,7 @@ namespace ydlidar{
 		}
 		size_t r;
         while (size) {
-            r = _serial->read(data, size);
+            r = _serial->readdata(data, size);
             if (r < 1) {
                 return RESULT_FAIL;
             }

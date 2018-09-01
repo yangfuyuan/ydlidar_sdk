@@ -37,6 +37,7 @@
 #include <Lidar/LIDARDriverInterface.h>
 #include <Lidar/DeviceException.h>
 #include <Serial/serial.h>
+#include <Sockets/ActiveSocket.h>
 
 
 
@@ -57,7 +58,7 @@ namespace ydlidar{
         * A constructor.
         * A more elaborate description of the constructor.
         */
-         YDlidarDriver();
+         explicit YDlidarDriver(uint8_t drivertype);
 
         /**
         * A destructor.
@@ -677,7 +678,7 @@ namespace ydlidar{
 
 	private:
         int PackageSampleBytes;             ///< laser points
-        serial::Serial *_serial;			///< serial
+        ChannelDevice *_serial;			///< serial
         bool m_intensities;					///< intensity
         int _sampling_rate;					///< sample rate
         int model;							///< lidar model
@@ -712,6 +713,7 @@ namespace ydlidar{
 
     private:
         LIDARDriverDataCallback   m_callback;
+        uint8_t                   m_driver_type;
 
 	};
 }

@@ -82,17 +82,27 @@ namespace serial {
 		SerialImpl *pimpl_;
 	};
 
-	Serial::Serial (const string &port, uint32_t baudrate, serial::Timeout timeout,
-		bytesize_t bytesize, parity_t parity, stopbits_t stopbits,
-		flowcontrol_t flowcontrol)
-		: pimpl_(new SerialImpl (port, baudrate, bytesize, parity,
-		stopbits, flowcontrol)) {
-		pimpl_->setTimeout(timeout);
+    Serial::Serial()
+    {
 	}
 
 	Serial::~Serial () {
 		delete pimpl_;
 	}
+
+    bool Serial::bind(const char * port, uint32_t baudrate) {
+        if(!pimpl_) {
+            delete pimpl_;
+            pimpl_ = NULL;
+        }
+        pimpl_ = new SerialImpl(port, baudrate, eightbits, parity_none,
+                                stopbits_one, flowcontrol_none);
+        Timeout t = Timeout::simpleTimeout(2000);
+        pimpl_->setTimeout(t);
+
+
+        return true;
+    }
 
 	bool Serial::open () {
 		return pimpl_->open ();
@@ -102,9 +112,17 @@ namespace serial {
 		pimpl_->close ();
 	}
 
-	bool Serial::isOpen () const {
+    bool Serial::isOpen () {
 		return pimpl_->isOpen ();
 	}
+
+    int Serial::writedata(const uint8_t *data, std::size_t size) {
+        return write(data, size);
+    }
+
+    int Serial::readdata(unsigned char *data, std::size_t size) {
+        return read(data, size);
+    }
 
 	size_t Serial::available () {
 		return pimpl_->available ();
@@ -348,7 +366,7 @@ namespace serial {
 		return pimpl_->getCD ();
 	}
 
-	uint32_t Serial::getByteTime(){
+    int Serial::getByteTime(){
 		return pimpl_->getByteTime();
 	}
 }

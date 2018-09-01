@@ -139,6 +139,7 @@ endmacro()
 # Add Devices
 add_subdirectory( Lidar )
 add_subdirectory( Serial )
+add_subdirectory( Sockets )
 add_subdirectory( simpleini )
 
 if( BUILD_EXAMPLE )
@@ -151,7 +152,7 @@ else( BUILD_SHARED_LIBS )
      add_definitions(-DYDLIDAR_API_STATIC)
 endif( BUILD_SHARED_LIBS )
 
-add_to_hal_headers(Utils.h)
+add_to_hal_headers(Utils.h ChannelDevice.h)
 
 #############################################################################
 # Setup libraries

@@ -33,6 +33,8 @@
 #include <cstring>
 #include <sstream>
 #include <Utils.h>
+#include <ChannelDevice.h>
+
 
 namespace serial {
 
@@ -130,7 +132,7 @@ namespace serial {
 	/*!
 	* Class that provides a portable serial port interface.
 	*/
-	class Serial {
+    class Serial : public ChannelDevice {
 	public:
 		/*!
 		* Creates a Serial object and opens the port if a port is specified,
@@ -163,16 +165,12 @@ namespace serial {
 		* \throw serial::IOException
 		* \throw std::invalid_argument
 		*/
-        explicit Serial (const std::string &port = "",
-			uint32_t baudrate = 9600,
-			Timeout timeout = Timeout(),
-			bytesize_t bytesize = eightbits,
-			parity_t parity = parity_none,
-			stopbits_t stopbits = stopbits_one,
-			flowcontrol_t flowcontrol = flowcontrol_none);
+        Serial ();
 
 		/*! Destructor */
 		virtual ~Serial ();
+
+        virtual bool bind(const char *, uint32_t);
 
 		/*!
 		* Opens the serial port as long as the port is set and the port isn't
@@ -184,16 +182,20 @@ namespace serial {
 		* \see Serial::Serial
 		* \return Returns true if the port is open, false otherwise.
 		*/
-		bool open ();
+        virtual bool open ();
 
 		/*! Gets the open status of the serial port.
 		*
 		* \return Returns true if the port is open, false otherwise.
 		*/
-		bool isOpen () const;
+        virtual bool isOpen ();
 
 		/*! Closes the serial port. */
-		void close ();
+        virtual void close ();
+
+        virtual int readdata(unsigned char *data, size_t size);
+
+        virtual int writedata(const uint8_t *data, size_t size);
 
 		/*! Return the number of characters in the buffer. */
 		size_t available ();
@@ -211,7 +213,7 @@ namespace serial {
 		void waitByteTimes (size_t count);
 
 
-		int waitfordata(size_t data_count, uint32_t timeout, size_t * returned_size);
+        virtual int waitfordata(size_t data_count, uint32_t timeout, size_t * returned_size);
 
 		/*! Read a given amount of bytes from the serial port into a given buffer.
 		*
@@ -239,7 +241,7 @@ namespace serial {
 		*         call to read.
 		*
 		*/
-		size_t read (uint8_t *buffer, size_t size);
+        virtual size_t read (uint8_t *buffer, size_t size);
 
 		/*! Read a given amount of bytes from the serial port into a give buffer.
 		*
@@ -327,7 +329,7 @@ namespace serial {
 		* \throw serial::SerialException
 		* \throw serial::IOException
 		*/
-		size_t write (const uint8_t *data, size_t size);
+        size_t write (const uint8_t *data, size_t size);
 
 		/*! Write a string to the serial port.
 		*
@@ -521,7 +523,7 @@ namespace serial {
 		flowcontrol_t getFlowcontrol () const;
 
 		/*! Flush the input and output buffers */
-		void flush ();
+        virtual void flush ();
 
 		/*! Flush only the input buffer */
 		void flushInput ();
@@ -539,7 +541,7 @@ namespace serial {
 		bool setRTS (bool level = true);
 
 		/*! Set the DTR handshaking line to the given level.  Defaults to true. */
-		bool setDTR (bool level = true);
+        bool setDTR (bool level = true);
 
 		/*!
 		* Blocks until CTS, DSR, RI, CD changes or something interrupts it.
@@ -569,7 +571,7 @@ namespace serial {
 		bool getCD ();
 
 		/*! Returns the singal byte time. */
-		uint32_t getByteTime();
+        int getByteTime();
 
 	private:
 		// Disable copy constructors

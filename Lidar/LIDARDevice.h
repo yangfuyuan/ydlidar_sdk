@@ -40,8 +40,8 @@ class LIDAR : public LIDARDriverInterface
 {
     public:
         ///////////////////////////////////////////////////////////////
-        LIDAR() {
-            YDlidarDriver* pDriver = new YDlidarDriver;
+        LIDAR(uint8_t drivertype = DRIVER_TYPE_SERIALPORT) {
+            YDlidarDriver* pDriver = new YDlidarDriver(drivertype);
             m_LIDAR  = std::shared_ptr<LIDARDriverInterface>( pDriver );
         }
 

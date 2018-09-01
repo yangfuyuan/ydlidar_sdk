@@ -179,8 +179,13 @@ typedef enum {
 #endif
 
 
-namespace ydlidar {
+enum {
+    DRIVER_TYPE_SERIALPORT = 0x0,
+    DRIVER_TYPE_TCP = 0x1,
+};
 
+
+namespace ydlidar {
 
 struct node_info {
     uint8_t    sync_flag;

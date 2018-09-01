@@ -50,7 +50,7 @@ namespace serial {
 		timespec expiry;
 	};
 
-	class serial::Serial::SerialImpl {
+    class serial::Serial::SerialImpl {
 	public:
         explicit SerialImpl (const string &port,
 			unsigned long baudrate,
