@@ -91,6 +91,7 @@
 #endif
 #include "Host.h"
 #include "StatTimer.h"
+#include <ChannelDevice.h>
 
 //-----------------------------------------------------------------------------
 // General class macro definitions and typedefs
@@ -110,7 +111,7 @@ namespace ydlidar {
 /// - Socket types
 ///  -# CActiveSocket Class
 ///  -# CPassiveSocket Class
-class CSimpleSocket {
+class CSimpleSocket : public ChannelDevice{
 public:
     /// Defines the three possible states for shuting down a socket.
     typedef enum
@@ -528,6 +529,24 @@ public:
     /// @return false if failed to set socket option otherwise return true;
     bool EnableNagleAlgoritm();
 
+    virtual bool Open(const char *pAddr, uint16_t nPort){return true;}
+
+    virtual bool bindport(const char*, uint32_t );
+
+    virtual bool open();
+
+    virtual bool isOpen();
+
+    virtual void closefd();
+
+    virtual void flush();
+
+    virtual int waitfordata(size_t data_count,uint32_t timeout = -1, size_t * returned_size = NULL);
+
+    virtual int writedata(const uint8_t * data, size_t size);
+
+    virtual int readdata(unsigned char * data, size_t size);
+
 
 protected:
     /// Set internal socket error to that specified error
@@ -597,6 +616,10 @@ protected:
     fd_set               m_writeFds;          /// write file descriptor set
     fd_set               m_readFds;           /// read file descriptor set
     fd_set               m_errorFds;          /// error file descriptor set
+
+    std::string          m_addr;
+    uint32_t             m_port;
+    bool                 m_open;
 };
 
 }

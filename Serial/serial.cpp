@@ -90,7 +90,7 @@ namespace serial {
 		delete pimpl_;
 	}
 
-    bool Serial::bind(const char * port, uint32_t baudrate) {
+    bool Serial::bindport(const char * port, uint32_t baudrate) {
         if(!pimpl_) {
             delete pimpl_;
             pimpl_ = NULL;
@@ -108,7 +108,7 @@ namespace serial {
 		return pimpl_->open ();
 	}
 
-	void Serial::close () {
+    void Serial::closefd () {
 		pimpl_->close ();
 	}
 
@@ -257,7 +257,7 @@ namespace serial {
 		ScopedReadLock rlock(this->pimpl_);
 		ScopedWriteLock wlock(this->pimpl_);
 		bool was_open = pimpl_->isOpen ();
-		if (was_open) close();
+        if (was_open) closefd();
 		pimpl_->setPort (port);
 		if (was_open) open ();
 	}

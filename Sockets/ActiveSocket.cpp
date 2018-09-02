@@ -47,43 +47,6 @@ using namespace ydlidar;
 
 CActiveSocket::CActiveSocket(CSocketType nType) : CSimpleSocket(nType)
 {
-    isopen = false;
-}
-
-bool CActiveSocket::bind(const char* addr, uint32_t port) {
-    m_addr = addr;
-    m_port = port;
-    return true;
-}
-
-bool CActiveSocket::open() {
-    isopen = Open(m_addr, m_port);
-    return isopen;
-}
-
-bool CActiveSocket::isOpen() {
-    return isopen&&IsSocketValid();
-}
-
-void CActiveSocket::close() {
-    Close();
-    isopen = false;
-}
-
-void CActiveSocket::flush() {
-    Flush();
-}
-
-int CActiveSocket::waitfordata(size_t data_count,uint32_t timeout, size_t * returned_size ) {
-    return WaitForData(data_count, timeout, returned_size);
-}
-
-int CActiveSocket::writedata(const uint8_t * data, size_t size) {
-    return Send( data, size);
-}
-
- int CActiveSocket::readdata(unsigned char * data, size_t size) {
-    return (size_t)Receive(size, data);
 }
 
 

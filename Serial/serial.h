@@ -170,7 +170,7 @@ namespace serial {
 		/*! Destructor */
 		virtual ~Serial ();
 
-        virtual bool bind(const char *, uint32_t);
+        virtual bool bindport(const char *, uint32_t);
 
 		/*!
 		* Opens the serial port as long as the port is set and the port isn't
@@ -191,7 +191,7 @@ namespace serial {
         virtual bool isOpen ();
 
 		/*! Closes the serial port. */
-        virtual void close ();
+        virtual void closefd ();
 
         virtual int readdata(unsigned char *data, size_t size);
 

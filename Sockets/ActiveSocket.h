@@ -44,7 +44,6 @@
 #define __ACTIVESOCKET_H__
 
 #include "SimpleSocket.h"
-#include <ChannelDevice.h>
 
 namespace ydlidar {
 
@@ -54,7 +53,7 @@ class CPassiveSocket;
 /// An active socket is used to create a socket which connects to a server.
 /// This type of object would be used when an application needs to send/receive
 /// data from a server.
-class CActiveSocket : public CSimpleSocket, public ChannelDevice {
+class CActiveSocket : public CSimpleSocket {
 public:
     friend class CPassiveSocket;
 
@@ -73,23 +72,6 @@ public:
     ///  @return true if successful connection made, otherwise false.
     virtual bool Open(const char *pAddr, uint16_t nPort);
 
-
-    virtual bool bind(const char*, uint32_t );
-
-    virtual bool open();
-
-    virtual bool isOpen();
-
-    virtual void close();
-
-    virtual void flush();
-
-    virtual int waitfordata(size_t data_count,uint32_t timeout = -1, size_t * returned_size = NULL);
-
-    virtual int writedata(const uint8_t * data, size_t size);
-
-    virtual int readdata(unsigned char * data, size_t size);
-
 private:
     /// Utility function used to create a TCP connection, called from Open().
     ///  @return true if successful connection made, otherwise false.
@@ -106,9 +88,6 @@ private:
 private:
     struct hostent *m_pHE;
 
-    const char * m_addr;
-    uint32_t m_port;
-    bool isopen;
 };
 
 }

@@ -32,6 +32,7 @@
 #include <iostream>
 #include <string>
 #include <memory>
+#include <regex>
 #include <Lidar/LIDARDevice.h>
 #include <config.h>
 #include <simpleini/SimpleIni.h>
@@ -86,6 +87,10 @@ int main(int argc, char * argv[])
     bool input = true;
     uint8_t driver_type = 0;
     std::string ini_file = "lidar.ini";
+    regex reg("(\\d{1,3}).(\\d{1,3}).(\\d{1,3}).(\\d{1,3})");
+    smatch m;
+
+
     bool ini_exist = fileExists(ini_file.c_str());
     if(ini_exist ||  argc > 1) {
         if(argc > 1)
@@ -94,7 +99,7 @@ int main(int argc, char * argv[])
             SI_Error rc = ini.LoadFile(ini_file.c_str());
             if(rc >= 0 ) {
                 input = false;
-                const char * pszValue = ini.GetValue("LIDAR", "serialPort", "");
+                const char * pszValue = ini.GetValue("LIDAR", "serialPort/IP", "");
                 cfg.serialPort = pszValue;
                 if(cfg.serialPort.empty()) {
                     input = true;
@@ -104,7 +109,7 @@ int main(int argc, char * argv[])
                 cfg.ignoreArray = split(pszValue,',');
 
 
-                cfg.serialBaudrate = ini.GetLongValue("LIDAR", "serialBaudrate", cfg.serialBaudrate);
+                cfg.serialBaudrate = ini.GetLongValue("LIDAR", "serialBaudrate/Port", cfg.serialBaudrate);
                 cfg.sampleRate = ini.GetLongValue("LIDAR", "sampleRate", cfg.sampleRate);
                 cfg.scanFrequency = ini.GetLongValue("LIDAR", "scanFrequency", cfg.scanFrequency);
 
@@ -114,13 +119,19 @@ int main(int argc, char * argv[])
                 cfg.fixedResolution = ini.GetBoolValue("LIDAR", "fixedResolution", cfg.fixedResolution);
                 cfg.reversion = ini.GetBoolValue("LIDAR", "reversion", cfg.reversion);
                 cfg.heartBeat = ini.GetBoolValue("LIDAR", "heartBeat", cfg.heartBeat);
-                driver_type =  ini.GetBoolValue("LIDAR", "driver_serial_type", true)?0:1;
+                driver_type =  ini.GetBoolValue("LIDAR", "serialType", true)?0:1;
 
 
                 cfg.maxAngle = ini.GetDoubleValue("LIDAR", "maxAngle", cfg.maxAngle);
                 cfg.minAngle = ini.GetDoubleValue("LIDAR", "minAngle", cfg.minAngle);
                 cfg.maxRange = ini.GetDoubleValue("LIDAR", "maxRange", cfg.maxRange);
                 cfg.minRange = ini.GetDoubleValue("LIDAR", "minRange", cfg.minRange);
+
+                if(regex_match(cfg.serialPort, m, reg)) {
+                    driver_type = 1;
+                }else {
+                    driver_type = 0;
+                }
             }
         }
 
@@ -131,8 +142,7 @@ int main(int argc, char * argv[])
     bool excep = false;
     bool input_port =false;
     try {
-        LIDAR ydlidar(driver_type);
-        std::vector<string> ports =  ydlidar.getLidarList();
+        std::vector<string> ports =  YDlidarDriver::lidarPortList();
         if(ports.size() == 1) {
             if(cfg.serialPort != ports[0]) {
                 std::string str;
@@ -155,10 +165,17 @@ int main(int argc, char * argv[])
             std::string baudrate;
             std::string intensity;
             if(ports.empty()) {
-                printf("Not radar delected, Please enter the radar port manually: ");
+                printf("Not radar delected, Please enter the radar port/IP manually: ");
                 std::cin>>port;
                 cfg.serialPort = port;
                 input_port = true;
+
+                if(regex_match(port, m, reg)) {
+                    driver_type = 1;
+                }else {
+                    driver_type = 0;
+                }
+
             }
 
 
@@ -183,26 +200,35 @@ int main(int argc, char * argv[])
 
 
 
-            std::vector<unsigned int> baud;
-            baud.push_back(115200);
-            baud.push_back(128000);
-            baud.push_back(153600);
-            baud.push_back(230400);
+            if(driver_type) {
+                printf("Please enter the lidar ip port:");
+                std::cin>>port;
+                cfg.serialBaudrate = atoi(port.c_str());
+            } else {
+                std::vector<unsigned int> baud;
+                baud.push_back(115200);
+                baud.push_back(128000);
+                baud.push_back(153600);
+                baud.push_back(230400);
 
-            for( unsigned int i = 0; i < baud.size(); i ++) {
-                printf("%u. %u\n", i, baud[i]);
+                for( unsigned int i = 0; i < baud.size(); i ++) {
+                    printf("%u. %u\n", i, baud[i]);
+                }
+
+                select_baud:
+                printf("Please select the lidar baud rate:");
+                std::cin>>baudrate;
+
+                if(atoi(baudrate.c_str()) >= 4) {
+                    printf("Invalid serial number, Please re-select\n");
+                    goto select_baud;
+
+                }
+                cfg.serialBaudrate = baud[atoi(baudrate.c_str())];
+
             }
 
-            select_baud:
-            printf("Please select the lidar baud rate:");
-            std::cin>>baudrate;
 
-            if(atoi(baudrate.c_str()) >= 4) {
-                printf("Invalid serial number, Please re-select\n");
-                goto select_baud;
-
-            }
-            cfg.serialBaudrate = baud[atoi(baudrate.c_str())];
 
 
             printf("0. false\n");
@@ -219,9 +245,11 @@ int main(int argc, char * argv[])
             cfg.intensity = atoi(intensity.c_str()) ==0?false:true;
         }
 
-        ini.SetValue("LIDAR", "serialPort", cfg.serialPort.c_str());
+        LIDAR ydlidar(driver_type);
 
-        ini.SetLongValue("LIDAR", "serialBaudrate", cfg.serialBaudrate);
+        ini.SetValue("LIDAR", "serialPort/IP", cfg.serialPort.c_str());
+
+        ini.SetLongValue("LIDAR", "serialBaudrate/Port", cfg.serialBaudrate);
         ini.SetLongValue("LIDAR", "sampleRate", cfg.sampleRate);
         ini.SetLongValue("LIDAR", "scanFrequency", cfg.scanFrequency);
 
@@ -232,7 +260,7 @@ int main(int argc, char * argv[])
         ini.SetBoolValue("LIDAR", "fixedResolution", cfg.fixedResolution);
         ini.SetBoolValue("LIDAR", "reversion", cfg.reversion);
         ini.SetBoolValue("LIDAR", "heartBeat", cfg.heartBeat);
-        ini.SetBoolValue("LIDAR", "driver_serial_type", !driver_type);
+        ini.SetBoolValue("LIDAR", "serialType", !driver_type);
 
         ini.SetDoubleValue("LIDAR", "maxAngle", cfg.maxAngle);
         ini.SetDoubleValue("LIDAR", "minAngle", cfg.minAngle);
@@ -242,9 +270,9 @@ int main(int argc, char * argv[])
         std::cout<<"SDK Version: "<< SDK_VERSION<<std::endl;
         std::cout <<"LIDAR Version: "<< YDLIDAR_VERSION <<std::endl;
 
-
         ydlidar.RegisterLIDARDataCallback(&LaserScanCallback);
         ydlidar.UpdateLidarParamCfg(cfg);
+
 
          while(ydlidar::ok()){
              try {

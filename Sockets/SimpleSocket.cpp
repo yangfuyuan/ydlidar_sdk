@@ -49,7 +49,7 @@ CSimpleSocket::CSimpleSocket(CSocketType nType) :
     m_pBuffer(NULL), m_nBufferSize(0), m_nSocketDomain(AF_INET),
     m_nSocketType(SocketTypeInvalid), m_nBytesReceived(-1),
     m_nBytesSent(-1), m_nFlags(0),
-    m_bIsBlocking(true)
+    m_bIsBlocking(true),m_open(false)
 {
     SetConnectTimeout(1, 0);
     memset(&m_stRecvTimeout, 0, sizeof(struct timeval));
@@ -126,6 +126,53 @@ CSimpleSocket *CSimpleSocket::operator=(CSimpleSocket &socket)
 
     return this;
 }
+
+
+
+bool CSimpleSocket::bindport(const char* addr, uint32_t port) {
+    m_addr = addr;
+    m_port = port;
+    SetConnectTimeout(2, 0);
+    return true;
+}
+
+bool CSimpleSocket::open() {
+    if(!IsSocketValid()) {
+        if(!Initialize()) {
+            return false;
+        }
+    }
+    SetNonblocking();
+    m_open = Open(m_addr.c_str(), m_port);
+    SetBlocking();
+    return m_open;
+}
+
+bool CSimpleSocket::isOpen() {
+    return m_open&&IsSocketValid();
+}
+
+void CSimpleSocket::closefd() {
+    Close();
+    m_open = false;
+}
+
+void CSimpleSocket::flush() {
+    Flush();
+}
+
+int CSimpleSocket::waitfordata(size_t data_count,uint32_t timeout, size_t * returned_size ) {
+    return WaitForData(data_count, timeout, returned_size);
+}
+
+int CSimpleSocket::writedata(const uint8_t * data, size_t size) {
+    return Send( data, size);
+}
+
+ int CSimpleSocket::readdata(unsigned char * data, size_t size) {
+    return (size_t)Receive(size, data);
+}
+
 
 
 //------------------------------------------------------------------------------

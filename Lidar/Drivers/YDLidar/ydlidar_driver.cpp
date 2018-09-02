@@ -100,7 +100,7 @@ namespace ydlidar{
         std::lock_guard<std::mutex> lck(_serial_lock);
 		if(_serial){
 			if(_serial->isOpen()){
-				_serial->close();
+                _serial->closefd();
 			}
 		}
 		if(_serial){
@@ -117,12 +117,12 @@ namespace ydlidar{
             switch (m_driver_type) {
             case DRIVER_TYPE_SERIALPORT:
                 _serial = new Serial();
-                _serial->bind(port_path, _baudrate);
+                _serial->bindport(port_path, _baudrate);
 
                 break;
             case DRIVER_TYPE_TCP:
                 _serial = new CActiveSocket();
-                _serial->bind(port_path, baudrate);
+                _serial->bindport(port_path, baudrate);
             default:
                 break;
             }
@@ -169,44 +169,52 @@ namespace ydlidar{
             throw DeviceException("The serial port is empty. please check the serial port settigns. ");
         }
 
-        getLidarList();
-        std::map<std::string,std::string>::iterator it;
-        it = lidar_map.find(config_msg.serialPort);
-        bool found = false;
-        if(it != lidar_map.end()) {
-            if(cfg_.serialPort != it->second) {
-                restart = true;
-                cfg_.serialPort = it->second;
-            }
-        }else {
-            for(it = lidar_map.begin(); it != lidar_map.end(); it++) {
-                if(config_msg.serialPort == it->second) {
-                    if(cfg_.serialPort != it->second) {
-                        restart = true;
-                        cfg_.serialPort = it->second;
-                        found = true;
-                        break;
+        if(m_driver_type == DRIVER_TYPE_SERIALPORT) {
+            getLidarList();
+            std::map<std::string,std::string>::iterator it;
+            it = lidar_map.find(config_msg.serialPort);
+            bool found = false;
+            if(it != lidar_map.end()) {
+                if(cfg_.serialPort != it->second) {
+                    restart = true;
+                    cfg_.serialPort = it->second;
+                }
+            }else {
+                for(it = lidar_map.begin(); it != lidar_map.end(); it++) {
+                    if(config_msg.serialPort == it->second) {
+                        if(cfg_.serialPort != it->second) {
+                            restart = true;
+                            cfg_.serialPort = it->second;
+                            found = true;
+                            break;
+                        }
                     }
                 }
-            }
 
-            if(!found) {
-                if(config_msg.serialPort != "/dev/ydlidar") {
-                    size_t pos = config_msg.serialPort.find("/dev/ttyS");
-                    size_t pos1 = config_msg.serialPort.find("/dev/ttyACM");
-					size_t pos2 = config_msg.serialPort.find("/dev/ttyH");
-                    if(pos != std::string::npos || pos1 != std::string::npos || pos2 != std::string::npos) {
+                if(!found) {
+                    if(config_msg.serialPort != "/dev/ydlidar") {
+                        size_t pos = config_msg.serialPort.find("/dev/ttyS");
+                        size_t pos1 = config_msg.serialPort.find("/dev/ttyACM");
+                        size_t pos2 = config_msg.serialPort.find("/dev/ttyH");
+                        if(pos != std::string::npos || pos1 != std::string::npos || pos2 != std::string::npos) {
+                            cfg_.serialPort = config_msg.serialPort;
+                            restart = true;
+                        }else {
+                            throw DeviceException("The serial port is error. please check the serial port settigns. ");
+                        }
+                    } else {
                         cfg_.serialPort = config_msg.serialPort;
                         restart = true;
-                    }else {
-                        throw DeviceException("The serial port is error. please check the serial port settigns. ");
                     }
-                } else {
-					cfg_.serialPort = config_msg.serialPort;
-                    restart = true;
                 }
             }
+        }else {
+            if(cfg_.serialPort != config_msg.serialPort) {
+                cfg_.serialPort = config_msg.serialPort;
+                restart = true;
+            }
         }
+
 
 
         cfg_.autoReconnect = config_msg.autoReconnect;
@@ -242,7 +250,7 @@ namespace ydlidar{
 
         if(restart) {
             if(!checkComms()) {
-                throw DeviceException("Serial port is connection failed.");
+                throw DeviceException("Serial/Socket port is connection failed.");
             }
             if(!checkDeviceHealth()) {
                 throw DeviceException("check lidar device health error.");
@@ -255,7 +263,7 @@ namespace ydlidar{
         }else {
             if(!isconnected()) {
                 if(!checkComms()) {
-                    throw DeviceException("Serial port is connection failed.");
+                    throw DeviceException("Serial/Socket port is connection failed.");
                 }
             }
 
@@ -469,7 +477,7 @@ namespace ydlidar{
         std::lock_guard<std::mutex> lck(_serial_lock);
 		if(_serial){
 			if(_serial->isOpen()){
-				_serial->close();
+                _serial->closefd();
 			}
 		}
 		isConnected = false;
@@ -659,7 +667,7 @@ namespace ydlidar{
                             if(_serial){
                                 if(_serial->isOpen()){
 									sendCommand(LIDAR_CMD_STOP);
-                                    _serial->close();
+                                    _serial->closefd();
 
                                 }
                                 delete _serial;
@@ -1714,7 +1722,7 @@ namespace ydlidar{
         }
 
         // Is it COMX, X>4? ->  "\\.\COMX"
-        if (cfg_.serialPort.size()>=3) {
+        if (m_driver_type==DRIVER_TYPE_SERIALPORT&&cfg_.serialPort.size()>=3) {
             if ( tolower( cfg_.serialPort[0]) =='c' && tolower( cfg_.serialPort[1]) =='o' && tolower( cfg_.serialPort[2]) =='m' ) {
                 // Need to add "\\.\"?
                 if (cfg_.serialPort.size()>4 || cfg_.serialPort[3]>'4')
@@ -1725,7 +1733,7 @@ namespace ydlidar{
         // make connection...
         result_t op_result = connect(cfg_.serialPort.c_str(), cfg_.serialBaudrate);
         if (op_result != RESULT_OK) {
-            fprintf(stderr, "[YDLIDAR INFO] Error, cannot bind to the specified serial port %s\n",  cfg_.serialPort.c_str() );
+            fprintf(stderr, "[YDLIDAR INFO] Error, cannot bind to the specified serial/socket port %s\n",  cfg_.serialPort.c_str() );
             return false;
         }
 
