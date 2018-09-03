@@ -1267,6 +1267,14 @@ int CSimpleSocket::WaitForData(size_t data_count, uint32_t timeout, size_t *retu
         }else{
             // data avaliable
             assert (FD_ISSET(m_socket, &m_readFds));
+#ifdef _WIN32
+            if(m_nSocketType == CSimpleSocket::SocketTypeTcp || m_nSocketType == CSimpleSocket::SocketTypeTcp) {
+                if(returned_size) {
+                    *returned_size = data_count;
+                }
+                return 0;
+            }
+#endif
 
             if ( IOCTLSOCKET(m_socket, FIONREAD, returned_size) == -1){
                 int32_t nLen = sizeof(nError);
