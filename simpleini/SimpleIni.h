@@ -3249,7 +3249,7 @@ public:
 #  define SI_NO_MBCS
 # endif
 #endif
-
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #ifdef SI_NO_MBCS
 # define SI_NoCase   SI_GenericNoCase

@@ -135,6 +135,10 @@ macro(subdirlist result curdir)
   set(${result} ${dirlist})
 endmacro()
 
+IF (WIN32)
+add_definitions(-DWIN32_LEAN_AND_MEAN)
+endif(WIN32)
+
 #############################################################################
 # Add Devices
 add_subdirectory( Lidar )
