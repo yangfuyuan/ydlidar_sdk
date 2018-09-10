@@ -56,6 +56,7 @@ namespace ydlidar{
         m_sampling_rate=-1;
 		model = -1;
         firmware_version = 0;
+        node_counts = 720;
 
         //parse parameters
         PackageSampleBytes = 2;
@@ -279,7 +280,7 @@ namespace ydlidar{
             if(ans == RESULT_OK) {
                 ScopedLocker lock(_cfg_lock);
                 size_t all_nodes_counts;
-                if(!cfg_.fixedResolution){
+                if(!cfg_.fixedResolution||!node_counts){
                     all_nodes_counts = count;
                 } else {
                     all_nodes_counts = node_counts;
