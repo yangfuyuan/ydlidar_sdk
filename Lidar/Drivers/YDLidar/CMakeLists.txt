@@ -29,7 +29,7 @@ include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 add_to_hal_sources( ydlidar_driver.cpp )
-add_to_hal_headers(ydlidar_driver.h  timer.h)
+add_to_hal_headers(ydlidar_driver.h  timer.h locker.h thread.h)
 
 IF (WIN32)
 add_to_hal_sources(win_timer.cpp)

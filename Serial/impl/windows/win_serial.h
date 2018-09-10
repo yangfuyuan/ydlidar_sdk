@@ -29,13 +29,12 @@
 #ifndef SERIAL_IMPL_WINDOWS_H
 #define SERIAL_IMPL_WINDOWS_H
 
-#include <Serial/serial.h>
-#include <tchar.h>
-
 #ifndef UNICODE
 #define UNICODE
 #define UNICODE_WAS_UNDEFINED
 #endif
+#include <Serial/serial.h>
+#include <tchar.h>
 #include "windows.h"
 
 #ifndef UNICODE_WAS_UNDEFINED

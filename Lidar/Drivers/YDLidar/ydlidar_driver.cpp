@@ -51,9 +51,9 @@ namespace ydlidar{
         isAutoReconnect = true;
         isAutoconnting = false;
 
-		_baudrate = 115200;
+        m_baudrate = 115200;
 		isSupportMotorCtrl=true;
-		_sampling_rate=-1;
+        m_sampling_rate=-1;
 		model = -1;
         firmware_version = 0;
 
@@ -93,11 +93,10 @@ namespace ydlidar{
 
         disconnect();
         isScanning = false;
-        isAutoReconnect = false;
-        if(_thread.joinable())
-            _thread.join();
+        isAutoReconnect = false; 
+        _thread.join();
 
-        std::lock_guard<std::mutex> lck(_serial_lock);
+        ScopedLocker lck(_serial_lock);
 		if(_serial){
 			if(_serial->isOpen()){
 				_serial->close();
@@ -110,11 +109,11 @@ namespace ydlidar{
 	}
 
 	result_t YDlidarDriver::connect(const char * port_path, uint32_t baudrate) {
-		_baudrate = baudrate;
+        m_baudrate = baudrate;
         serial_port = string(port_path);
-        std::lock_guard<std::mutex> lck(_serial_lock);
+        ScopedLocker lck(_serial_lock);
 		if(!_serial){
-			_serial = new serial::Serial(port_path, _baudrate, serial::Timeout::simpleTimeout(DEFAULT_TIMEOUT));
+            _serial = new serial::Serial(port_path, m_baudrate, serial::Timeout::simpleTimeout(DEFAULT_TIMEOUT));
 		}
 
 		{
@@ -147,7 +146,7 @@ namespace ydlidar{
     }
 
     void YDlidarDriver::UpdateLidarParamCfg(const LaserParamCfg &config_msg) {
-        std::lock_guard<std::mutex>  lock(_cfg_lock);
+        ScopedLocker  lock(_cfg_lock);
         bool restart = false;
 
         if( config_msg.maxAngle < config_msg.minAngle) {
@@ -252,7 +251,6 @@ namespace ydlidar{
         }
 
         setIntensities(cfg_.intensity);
-
         if(!isscanning()) {
             result_t s_result= startScan();
             if (s_result != RESULT_OK) {
@@ -262,7 +260,6 @@ namespace ydlidar{
             delay(1000);
         }
         printf("start scanning.....\n");
-
         setAutoReconnect(cfg_.autoReconnect);
 
     }
@@ -280,7 +277,7 @@ namespace ydlidar{
         if(ans == RESULT_OK) {
             ans = ascendScanData(nodes, count);
             if(ans == RESULT_OK) {
-                std::lock_guard<std::mutex>  lock(_cfg_lock);
+                ScopedLocker lock(_cfg_lock);
                 size_t all_nodes_counts;
                 if(!cfg_.fixedResolution){
                     all_nodes_counts = count;
@@ -300,7 +297,7 @@ namespace ydlidar{
                         if(cfg_.reversion){
                            angle=angle+180;
                            if(angle>=360){ angle=angle-360;}
-                            nodes[i].angle_q6_checkbit = ((uint16_t)(angle * 64.0f)) << LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT;
+                           nodes[i].angle_q6_checkbit = ((uint16_t)(angle * 64.0f)) << LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT;
                         }
                         size_t inter =(int)( angle / each_angle );
                         float angle_pre = angle - inter * each_angle;
@@ -425,7 +422,7 @@ namespace ydlidar{
 	}
 
 	result_t YDlidarDriver::startMotor() {
-        std::lock_guard<std::mutex> l(_lock);
+        ScopedLocker l(_lock);
 		if(isSupportMotorCtrl){
 			setDTR();
 			delay(500);
@@ -437,7 +434,7 @@ namespace ydlidar{
 	}
 
 	result_t YDlidarDriver::stopMotor() {
-        std::lock_guard<std::mutex> l(_lock);
+        ScopedLocker l(_lock);
 		if(isSupportMotorCtrl){
 			clearDTR();
 			delay(500);
@@ -455,7 +452,7 @@ namespace ydlidar{
 		}
 		stop();
 
-        std::lock_guard<std::mutex> lck(_serial_lock);
+        ScopedLocker lck(_serial_lock);
 		if(_serial){
 			if(_serial->isOpen()){
 				_serial->close();
@@ -467,12 +464,11 @@ namespace ydlidar{
 
 	void YDlidarDriver::disableDataGrabbing() {
 		{
-            unique_lock lock(_lock);
+
             isScanning = false;
-            cond_.notify_one();
 		}
-        if(_thread.joinable())
-            _thread.join();
+
+        _thread.join();
 	}
 
     bool YDlidarDriver::isscanning() const
@@ -635,16 +631,16 @@ namespace ydlidar{
                         fprintf(stderr, "exit scanning thread!!\n");
                         {
 
-                            unique_lock lock(_lock);
+                            ScopedLocker lock(_lock);
                             isScanning = false;
-                            cond_.notify_one();
+                            _cond.set();
                         }
                         throw DeviceException("wait scan data error for serial exception. exit scanning thread");
                     } else {//
                         isAutoconnting = true;
                         again:
                         {
-                            std::lock_guard<std::mutex> lck(_serial_lock);
+                            ScopedLocker lck(_serial_lock);
                             if(_serial){
                                 if(_serial->isOpen()){
 									sendCommand(LIDAR_CMD_STOP);
@@ -657,7 +653,7 @@ namespace ydlidar{
                             }
                         }
 
-                        while(isAutoReconnect&&connect(serial_port.c_str(), _baudrate) != RESULT_OK){
+                        while(isAutoReconnect&&connect(serial_port.c_str(), m_baudrate) != RESULT_OK){
                             delay(1000);
                         }
                         if(!isAutoReconnect) {
@@ -688,7 +684,7 @@ namespace ydlidar{
                         memcpy(scan_node_buf, local_scan, scan_count*sizeof(node_info));
                         scan_node_count = scan_count;
                         _lock.unlock();
-                        cond_.notify_one();
+                        _cond.set();
 
 					}
 					scan_count = 0;
@@ -710,9 +706,9 @@ namespace ydlidar{
 		}
 
 		{
-            unique_lock lock(_lock);
+            ScopedLocker lock(_lock);
 			isScanning = false;
-            cond_.notify_one();
+            _cond.set();
 		}
 		return RESULT_OK;
 	}
@@ -1009,25 +1005,37 @@ namespace ydlidar{
 	}
 
     result_t YDlidarDriver::grabScanData(node_info *nodebuffer, size_t &count, uint32_t timeout) {
-        unique_lock lock(_lock);
-        while (cond_.wait_for(lock,std::chrono::milliseconds(timeout))==std::cv_status::timeout) {
-            return RESULT_TIMEOUT;
-        }
+        switch (_cond.wait(timeout)) {
+            case Event::EVENT_TIMEOUT:
+                count = 0;
+                return RESULT_TIMEOUT;
+            case Event::EVENT_OK:
+            {
+                if(scan_node_count == 0) {
+                    return RESULT_FAIL;
+                }
+                size_t size_to_copy = min(count, scan_node_count);
+                memcpy(nodebuffer, scan_node_buf, size_to_copy*sizeof(node_info));
+                count = size_to_copy;
+                scan_node_count = 0;
+            }
+                return RESULT_OK;
+            default:
+                count = 0;
+                return RESULT_FAIL;
 
-        if(scan_node_count == 0) {
-            return RESULT_FAIL;
+
         }
-        size_t size_to_copy = min(count, scan_node_count);
-        memcpy(nodebuffer, scan_node_buf, size_to_copy*sizeof(node_info));
-        count = size_to_copy;
-        scan_node_count = 0;
-        return RESULT_OK;
+        return RESULT_FAIL;
     }
 
 
+    static bool angleLessThan(const node_info& a, const node_info& b) {
+        return a.angle_q6_checkbit < b.angle_q6_checkbit;
+    }
+
 	result_t YDlidarDriver::ascendScanData(node_info * nodebuffer, size_t count) {
 		float inc_origin_angle = (float)360.0/count;
-		node_info *tmpbuffer = new node_info[count];
 		int i = 0;
 
 		for (i = 0; i < (int)count; i++) {
@@ -1046,7 +1054,6 @@ namespace ydlidar{
 		}
 
 		if (i == (int)count){
-			delete[] tmpbuffer;
 			return RESULT_FAIL;
 		}
 
@@ -1075,28 +1082,7 @@ namespace ydlidar{
 			}
 		}
 
-		size_t zero_pos = 0;
-		float pre_degree = (nodebuffer[0].angle_q6_checkbit >> LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT)/64.0f;
-
-		for (i = 1; i < (int)count ; ++i) {
-			float degree = (nodebuffer[i].angle_q6_checkbit >> LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT)/64.0f;
-			if (zero_pos == 0 && (pre_degree - degree > 180)) {
-				zero_pos = i;
-				break;
-			}
-			pre_degree = degree;
-		}
-
-		for (i = (int)zero_pos; i < (int)count; i++) {
-			tmpbuffer[i-zero_pos] = nodebuffer[i];
-		}
-		for (i = 0; i < (int)zero_pos; i++) {
-			tmpbuffer[i+(int)count-zero_pos] = nodebuffer[i];
-		}
-
-		memcpy(nodebuffer, tmpbuffer, count*sizeof(node_info));
-		delete[] tmpbuffer;
-
+        std::sort(nodebuffer, nodebuffer + count, &angleLessThan);
 		return RESULT_OK;
 	}
 
@@ -1111,10 +1097,11 @@ namespace ydlidar{
 
 		disableDataGrabbing();
 		{
-            std::lock_guard<std::mutex> l(_lock);
+            ScopedLocker l(_lock);
 			if ((ans = sendCommand(LIDAR_CMD_GET_DEVICE_HEALTH)) != RESULT_OK) {
 				return ans;
 			}
+            _serial->flush();
 			lidar_ans_header response_header;
 			if ((ans = waitResponseHeader(&response_header, timeout)) != RESULT_OK) {
 				return ans;
@@ -1148,10 +1135,11 @@ namespace ydlidar{
 
 		disableDataGrabbing();
 		{
-            std::lock_guard<std::mutex> l(_lock);
+            ScopedLocker l(_lock);
             if ((ans = sendCommand(LIDAR_CMD_GET_DEVICE_INFO)) != RESULT_OK) {
 				return ans;
 			}
+            _serial->flush();
 
 			lidar_ans_header response_header;
 			if ((ans = waitResponseHeader(&response_header, timeout)) != RESULT_OK) {
@@ -1229,6 +1217,66 @@ namespace ydlidar{
             isAutoReconnect = enable;
     }
 
+    void YDlidarDriver::checkTimer() {
+        //calc stamp
+        m_pointTime = 1e9/4000;
+        trans_delay = 0;
+
+        switch(model){
+            case YDLIDAR_F4://f4
+            trans_delay = _serial->getByteTime();
+            break;
+            case YDLIDAR_G4://g4
+            {
+                if(m_sampling_rate == -1){
+                    sampling_rate _rate;
+                    getSamplingRate(_rate);
+                    m_sampling_rate = _rate.rate;
+                }
+                switch(m_sampling_rate){
+                    case 1:
+                    m_pointTime = 1e9/8000;
+                    break;
+                    case 2:
+                    m_pointTime = 1e9/9000;
+                    break;
+                }
+                if(firmware_version < 521&& firmware_version != 0){
+                    setHeartBeat(false);
+                }
+
+            }
+            trans_delay = _serial->getByteTime();
+            break;
+            case YDLIDAR_X4://x4
+            m_pointTime = 1e9/5000;
+            break;
+            case YDLIDAR_F4PRO://f4pro
+            {
+                if(m_sampling_rate == -1){
+                    sampling_rate _rate;
+                    getSamplingRate(_rate);
+                    m_sampling_rate = _rate.rate;
+                }
+                if(m_sampling_rate ==1){
+                    m_pointTime = 1e9/6000;
+                }
+                if(firmware_version < 521&& firmware_version != 0){
+                    setHeartBeat(false);
+                }
+
+            }
+            trans_delay = _serial->getByteTime();
+            break;
+            case YDLIDAR_G4C://g4c
+            trans_delay = _serial->getByteTime();
+            if(firmware_version < 521&& firmware_version != 0){
+                setHeartBeat(false);
+            }
+            break;
+        }
+    }
+
 	/************************************************************************/
 	/*  start to scan                                                       */
 	/************************************************************************/
@@ -1243,73 +1291,11 @@ namespace ydlidar{
 
 		stop();   
 		startMotor();
-
-        {
-            //calc stamp
-            m_pointTime = 1e9/4000;
-            trans_delay = 0;
-            {
-                if(model != -1){
-                    switch(model){
-                        case 1://f4
-                        trans_delay = _serial->getByteTime();
-                        break;
-                        case 5://g4
-                        {
-                            if(_sampling_rate == -1){
-                                sampling_rate _rate;
-                                getSamplingRate(_rate);
-                                _sampling_rate = _rate.rate;
-                            }
-                            switch(_sampling_rate){
-                                case 1:
-                                m_pointTime = 1e9/8000;
-                                break;
-                                case 2:
-                                m_pointTime = 1e9/9000;
-                                break;
-                            }
-                            if(firmware_version < 521&& firmware_version != 0){
-                                setHeartBeat(false);
-                            }
-
-                        }
-                        trans_delay = _serial->getByteTime();
-                        break;
-                        case 6://x4
-                        m_pointTime = 1e9/5000;
-                        break;
-                        case 8://f4pro
-                        {
-                            if(_sampling_rate == -1){
-                                sampling_rate _rate;
-                                getSamplingRate(_rate);
-                                _sampling_rate = _rate.rate;
-                            }
-                            if(_sampling_rate ==1){
-                                m_pointTime = 1e9/6000;
-                            }
-                            if(firmware_version < 521&& firmware_version != 0){
-                                setHeartBeat(false);
-                            }
-
-                        }
-                        trans_delay = _serial->getByteTime();
-                        break;
-                        case 9://g4c
-                        trans_delay = _serial->getByteTime();
-                        if(firmware_version < 521&& firmware_version != 0){
-                            setHeartBeat(false);
-                        }
-                        break;
-                    }
-                }
-            }
-        }
+        checkTimer();
 
 		{
-            std::lock_guard<std::mutex> l(_lock);
-			if ((ans = sendCommand(force?LIDAR_CMD_FORCE_SCAN:LIDAR_CMD_SCAN)) != RESULT_OK) {
+            ScopedLocker l(_lock);
+            if ((ans = sendCommand(force?LIDAR_CMD_FORCE_SCAN:LIDAR_CMD_SCAN)) != RESULT_OK) {
 				return ans;
 			}
 
@@ -1333,7 +1319,10 @@ namespace ydlidar{
 	}
 
 	result_t YDlidarDriver::createThread() {
-        _thread = std::thread(std::bind(&YDlidarDriver::cacheScanData, this));
+        _thread = CLASS_THREAD(YDlidarDriver, cacheScanData);
+        if (_thread.getHandle() == 0) {
+            return RESULT_FAIL;
+        }
 		isScanning = true;
 		return RESULT_OK;
 	}
@@ -1347,7 +1336,7 @@ namespace ydlidar{
             return RESULT_FAIL;
         }
         {
-            std::lock_guard<std::mutex> l(_lock);
+            ScopedLocker l(_lock);
             if ((ans = sendCommand(force?LIDAR_CMD_FORCE_SCAN:LIDAR_CMD_SCAN)) != RESULT_OK) {
                 return ans;
             }
@@ -1383,8 +1372,8 @@ namespace ydlidar{
         }
 		disableDataGrabbing();
 		{
-            std::lock_guard<std::mutex> l(_lock);
-			sendCommand(LIDAR_CMD_STOP);
+            ScopedLocker l(_lock);
+            sendCommand(LIDAR_CMD_FORCE_STOP);
 			sendCommand(LIDAR_CMD_STOP);
 		}
 
@@ -1402,7 +1391,7 @@ namespace ydlidar{
 		if (!isConnected){
 			return RESULT_FAIL;
 		}
-        std::lock_guard<std::mutex> l(_lock);
+        ScopedLocker l(_lock);
 		if ((ans = sendCommand(LIDAR_CMD_RESET))!= RESULT_OK) {
 			return ans;
 		}
@@ -1440,19 +1429,19 @@ namespace ydlidar{
         int bad = 0;
 
         switch (devinfo.model) {
-            case 1:
+            case YDLIDAR_F4:
                 model="F4";
                 break;
-            case 2:
+            case YDLIDAR_T1:
                 model="T1";
                 break;
-            case 3:
+            case YDLIDAR_F2:
                 model="F2";
                 break;
-            case 4:
+            case YDLIDAR_S4:
                 model="S4";
                 break;
-            case 5:
+            case YDLIDAR_G4:
             {
                 model="G4";
                 ans = getSamplingRate(_rate);
@@ -1498,14 +1487,14 @@ namespace ydlidar{
 
 
                 }
-            cfg_.reversion = true;
+                //cfg_.reversion = true;
 
             }
                 break;
-            case 6:
+            case YDLIDAR_X4:
                 model= "X4";
             break;
-            case 8:
+            case YDLIDAR_F4PRO:
             {
                 model="F4Pro";
                 ans = getSamplingRate(_rate);
@@ -1545,9 +1534,9 @@ namespace ydlidar{
 
             }
                 break;
-            case 9:
+            case YDLIDAR_G4C:
                 model = "G4C";
-                cfg_.reversion = true;
+                //cfg_.reversion = true;
                 break;
             default:
                 model = "Unknown";
@@ -1733,7 +1722,7 @@ namespace ydlidar{
 
 		disableDataGrabbing();
 		{
-            std::lock_guard<std::mutex> l(_lock);
+            ScopedLocker l(_lock);
 			if ((ans = sendCommand(LIDAR_CMD_GET_AIMSPEED)) != RESULT_OK) {
 				return ans;
 			}
@@ -1771,7 +1760,7 @@ namespace ydlidar{
 
 		disableDataGrabbing();
 		{
-            std::lock_guard<std::mutex> l(_lock);
+            ScopedLocker l(_lock);
 			if ((ans = sendCommand(LIDAR_CMD_SET_AIMSPEED_ADD)) != RESULT_OK) {
 				return ans;
 			}
@@ -1809,7 +1798,7 @@ namespace ydlidar{
 
 		disableDataGrabbing();
 		{
-            std::lock_guard<std::mutex> l(_lock);
+            ScopedLocker l(_lock);
 			if ((ans = sendCommand(LIDAR_CMD_SET_AIMSPEED_DIS)) != RESULT_OK) {
 				return ans;
 			}
@@ -1847,7 +1836,7 @@ namespace ydlidar{
 
 		disableDataGrabbing();
 		{
-            std::lock_guard<std::mutex> l(_lock);
+            ScopedLocker l(_lock);
 			if ((ans = sendCommand(LIDAR_CMD_SET_AIMSPEED_ADDMIC)) != RESULT_OK) {
 				return ans;
 			}
@@ -1885,7 +1874,7 @@ namespace ydlidar{
 
 		disableDataGrabbing();
 		{
-            std::lock_guard<std::mutex> l(_lock);
+            ScopedLocker l(_lock);
 			if ((ans = sendCommand(LIDAR_CMD_SET_AIMSPEED_DISMIC)) != RESULT_OK) {
 				return ans;
 			}
@@ -1923,7 +1912,7 @@ namespace ydlidar{
 
 		disableDataGrabbing();
 		{
-            std::lock_guard<std::mutex> l(_lock);
+            ScopedLocker l(_lock);
 			if ((ans = sendCommand(LIDAR_CMD_GET_SAMPLING_RATE)) != RESULT_OK) {
 				return ans;
 			}
@@ -1946,7 +1935,7 @@ namespace ydlidar{
 			}
 
 			getData(reinterpret_cast<uint8_t *>(&rate), sizeof(rate));
-			_sampling_rate=rate.rate;
+            m_sampling_rate=rate.rate;
 		}
 		return RESULT_OK;
 	}
@@ -1961,7 +1950,7 @@ namespace ydlidar{
 		}
 		disableDataGrabbing();
 		{
-            std::lock_guard<std::mutex> l(_lock);
+            ScopedLocker l(_lock);
 			if ((ans = sendCommand(LIDAR_CMD_SET_SAMPLING_RATE)) != RESULT_OK) {
 				return ans;
 			}
@@ -1983,7 +1972,7 @@ namespace ydlidar{
 				return RESULT_FAIL;
 			}
 			getData(reinterpret_cast<uint8_t *>(&rate), sizeof(rate));
-			_sampling_rate=rate.rate;
+            m_sampling_rate=rate.rate;
 		}
 		return RESULT_OK;
 	}
@@ -2000,7 +1989,7 @@ namespace ydlidar{
 		}
 		disableDataGrabbing();
 		{
-            std::lock_guard<std::mutex> l(_lock);
+            ScopedLocker l(_lock);
 			if ((ans = sendCommand(LIDAR_CMD_RUN_POSITIVE)) != RESULT_OK) {
 				return ans;
 			}
@@ -2033,7 +2022,7 @@ namespace ydlidar{
 		}
 		disableDataGrabbing();
 		{
-            std::lock_guard<std::mutex> l(_lock);
+            ScopedLocker l(_lock);
 			if ((ans = sendCommand(LIDAR_CMD_RUN_INVERSION)) != RESULT_OK) {
 				return ans;
 			}
@@ -2069,7 +2058,7 @@ namespace ydlidar{
 		}
 		disableDataGrabbing();
 		{
-            std::lock_guard<std::mutex> l(_lock);
+            ScopedLocker l(_lock);
 			if ((ans = sendCommand(LIDAR_CMD_ENABLE_LOW_POWER)) != RESULT_OK) {
 				return ans;
 			}
@@ -2105,7 +2094,7 @@ namespace ydlidar{
 		}
 		disableDataGrabbing();
 		{
-            std::lock_guard<std::mutex> l(_lock);
+            ScopedLocker l(_lock);
 			if ((ans = sendCommand(LIDAR_CMD_DISABLE_LOW_POWER)) != RESULT_OK) {
 				return ans;
 			}
@@ -2141,7 +2130,7 @@ namespace ydlidar{
 		}
 		disableDataGrabbing();
 		{
-            std::lock_guard<std::mutex> l(_lock);
+            ScopedLocker l(_lock);
 			if ((ans = sendCommand(LIDAR_CMD_STATE_MODEL_MOTOR)) != RESULT_OK) {
 				return ans;
 			}
@@ -2177,7 +2166,7 @@ namespace ydlidar{
 		}
 		disableDataGrabbing();
 		{
-            std::lock_guard<std::mutex> l(_lock);
+            ScopedLocker l(_lock);
 			if ((ans = sendCommand(LIDAR_CMD_ENABLE_CONST_FREQ)) != RESULT_OK) {
 				return ans;
 			}
@@ -2213,7 +2202,7 @@ namespace ydlidar{
 		}
 		disableDataGrabbing();
 		{
-            std::lock_guard<std::mutex> l(_lock);
+            ScopedLocker l(_lock);
 			if ((ans = sendCommand(LIDAR_CMD_DISABLE_CONST_FREQ)) != RESULT_OK) {
 				return ans;
 			}
@@ -2249,7 +2238,7 @@ namespace ydlidar{
 		}
 		disableDataGrabbing();
 		{
-            std::lock_guard<std::mutex> l(_lock);
+            ScopedLocker l(_lock);
 			if ((ans = sendCommand(LIDAR_CMD_SAVE_SET_EXPOSURE)) != RESULT_OK) {
 				return ans;
 			}
@@ -2287,7 +2276,7 @@ namespace ydlidar{
 		}
 		disableDataGrabbing();
 		{
-            std::lock_guard<std::mutex> l(_lock);
+            ScopedLocker l(_lock);
 			if ((ans = sendCommand(LIDAR_CMD_SET_LOW_EXPOSURE)) != RESULT_OK) {
 				return ans;
 			}
@@ -2325,7 +2314,7 @@ namespace ydlidar{
 		}
 		disableDataGrabbing();
 		{
-            std::lock_guard<std::mutex> l(_lock);
+            ScopedLocker l(_lock);
 			if ((ans = sendCommand(LIDAR_CMD_ADD_EXPOSURE)) != RESULT_OK) {
 				return ans;
 			}
@@ -2363,7 +2352,7 @@ namespace ydlidar{
 		}
 		disableDataGrabbing();
 		{
-            std::lock_guard<std::mutex> l(_lock);
+            ScopedLocker l(_lock);
 			if ((ans = sendCommand(LIDAR_CMD_DIS_EXPOSURE)) != RESULT_OK) {
 				return ans;
 			}
@@ -2402,7 +2391,7 @@ namespace ydlidar{
         }
         disableDataGrabbing();
         {
-            std::lock_guard<std::mutex> l(_lock);
+            ScopedLocker l(_lock);
             if ((ans = sendCommand(LIDAR_CMD_SET_HEART_BEAT)) != RESULT_OK) {
                 return ans;
 
@@ -2444,7 +2433,7 @@ namespace ydlidar{
 		}
 		disableDataGrabbing();
 		{
-            std::lock_guard<std::mutex> l(_lock);
+            ScopedLocker l(_lock);
 			if ((ans = sendCommand(LIDAR_CMD_SET_SETPOINTSFORONERINGFLAG)) != RESULT_OK) {
 				return ans;
 			}

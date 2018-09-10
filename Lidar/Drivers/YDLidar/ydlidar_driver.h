@@ -31,12 +31,13 @@
 #include <atomic>
 #include <list>
 #include <map>
-#include <thread>
-#include <mutex>
+#include <algorithm>
 #include <condition_variable>
 #include <Lidar/LIDARDriverInterface.h>
 #include <Lidar/DeviceException.h>
 #include <Serial/serial.h>
+#include "locker.h"
+#include "thread.h"
 
 
 
@@ -45,9 +46,6 @@ using namespace serial;
 
 
 namespace ydlidar{
-
-    typedef std::unique_lock<std::mutex> unique_lock;
-
 
     YDLIDAR_API class YDlidarDriver : public LIDARDriverInterface
 	{
@@ -632,13 +630,13 @@ namespace ydlidar{
 
         /** Retruns true if the scan frequency is set to user's frequency is successful, If it's not*/
         bool checkScanFrequency() ;
-
-
         /**
          * @brief check serial
          * @return true if the lidar is connected , If it's not
          */
         bool checkComms() ;
+
+        void checkTimer();
 
 
     private:
@@ -649,9 +647,9 @@ namespace ydlidar{
         std::atomic_bool     isAutoconnting;  ///<
 
 		enum {
-            DEFAULT_TIMEOUT = 2000,    /**< Default timeout. */
-            DEFAULT_HEART_BEAT = 1000, /**< Default heatbeat send time. */
-            MAX_SCAN_NODES = 2048,	   /**< Maximum number of scan points. */
+            DEFAULT_TIMEOUT     = 2000,    /**< Default timeout. */
+            DEFAULT_HEART_BEAT  = 1000, /**< Default heatbeat send time. */
+            MAX_SCAN_NODES      = 2048,	   /**< Maximum number of scan points. */
 		};
 		enum { 
             YDLIDAR_F4=1, /**< F4 code. */
@@ -660,58 +658,58 @@ namespace ydlidar{
             YDLIDAR_S4=4, /**< S4 code. */
             YDLIDAR_G4=5, /**< G4 code. */
             YDLIDAR_X4=6, /**< X4 code. */
-            YDLIDAR_F4PRO=6, /**< F4PRO code. */
+            YDLIDAR_F4PRO=8, /**< F4PRO code. */
             YDLIDAR_G4C=9, /**< G4C code. */
 
 		};
         node_info               scan_node_buf[2048];  ///< Laser point information
         size_t                  scan_node_count;      ///< Laser point count
-        std::mutex              _cfg_lock;			  ///< paramters lock
-        std::mutex              _serial_lock;		 ///< serial lock
-        mutable std::mutex      _lock;
-        std::condition_variable cond_;
-        std::thread             _thread;
+        Locker                  _cfg_lock;			  ///< paramters lock
+        Locker                  _serial_lock;		 ///< serial lock
+        Locker                  _lock;
+        Event                   _cond;			      ///<
+        Thread                  _thread;				///<
 
 
 
 
 	private:
-        int PackageSampleBytes;             ///< laser points
-        serial::Serial *_serial;			///< serial
-        bool m_intensities;					///< intensity
-        int _sampling_rate;					///< sample rate
-        int model;							///< lidar model
-        uint32_t _baudrate;					///< baud rate
-        bool isSupportMotorCtrl;			///< Motor control
-        uint64_t m_ns;						///< time stamp
-        uint32_t m_pointTime;				///< laser point time interval
-        uint32_t trans_delay;				///< Transmission time
-        uint16_t firmware_version;          ///< Firmware version
+        int                                 PackageSampleBytes;             ///< laser points
+        serial::Serial                      *_serial;			///< serial
+        bool                                m_intensities;					///< intensity
+        int                                 m_sampling_rate;					///< sample rate
+        int                                 model;							///< lidar model
+        uint32_t                            m_baudrate;					///< baud rate
+        bool                                isSupportMotorCtrl;			///< Motor control
+        uint64_t                            m_ns;						///< time stamp
+        uint32_t                            m_pointTime;				///< laser point time interval
+        uint32_t                            trans_delay;				///< Transmission time
+        uint16_t                            firmware_version;          ///< Firmware version
 
-        node_package package;
-        node_packages packages;
+        node_package                        package;
+        node_packages                       packages;
 
-        uint16_t package_Sample_Index;
-        float IntervalSampleAngle;
-        float IntervalSampleAngle_LastPackage;
-        uint16_t FirstSampleAngle;
-        uint16_t LastSampleAngle;
-        uint16_t CheckSun;
+        uint16_t                            package_Sample_Index;
+        float                               IntervalSampleAngle;
+        float                               IntervalSampleAngle_LastPackage;
+        uint16_t                            FirstSampleAngle;
+        uint16_t                            LastSampleAngle;
+        uint16_t                            CheckSun;
 
-        uint16_t CheckSunCal;
-        uint16_t SampleNumlAndCTCal;
-        uint16_t LastSampleAngleCal;
-        bool CheckSunResult;
-        uint16_t Valu8Tou16;
-        std::string serial_port;///< serial port
+        uint16_t                            CheckSunCal;
+        uint16_t                            SampleNumlAndCTCal;
+        uint16_t                            LastSampleAngleCal;
+        bool                                CheckSunResult;
+        uint16_t                            Valu8Tou16;
+        std::string                         serial_port;///< serial port
 
-        LaserParamCfg cfg_; ///< configuration parameters
-        size_t        node_counts; ///< laser point count
+        LaserParamCfg                       cfg_; ///< configuration parameters
+        size_t                              node_counts; ///< laser point count
 
         static std::map<std::string, std::string> lidar_map;
 
     private:
-        LIDARDriverDataCallback   m_callback;
+        LIDARDriverDataCallback             m_callback;
 
 	};
 }

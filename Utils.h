@@ -87,6 +87,27 @@ typedef unsigned __int64 uint64_t;
 #define __attribute__(x)
 #endif
 
+#ifdef _AVR_
+typedef uint8_t        _size_t;
+#define THREAD_PROC
+#elif defined (WIN64)
+typedef uint64_t       _size_t;
+#define THREAD_PROC    __stdcall
+#elif defined (WIN32)
+typedef uint32_t       _size_t;
+#define THREAD_PROC    __stdcall
+#elif defined (_M_X64)
+typedef uint64_t       _size_t;
+#define THREAD_PROC    __stdcall
+#elif defined (__GNUC__)
+typedef unsigned long  _size_t;
+#define THREAD_PROC
+#elif defined (__ICCARM__)
+typedef uint32_t       _size_t;
+#define THREAD_PROC
+#endif
+
+typedef _size_t (THREAD_PROC * thread_proc_t ) ( void * );
 
 typedef int32_t result_t;
 

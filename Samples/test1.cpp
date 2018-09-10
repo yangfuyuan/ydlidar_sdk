@@ -189,7 +189,7 @@ int main(int argc, char **argv) {
             std::string str;
             printf("Radar[%s] detected, whether to select current radar(yes/no)?:", ports[0].c_str());
             std::cin>>str;
-            for (int i=0; i <str.size(); i++)
+            for (size_t i=0; i <str.size(); i++)
                str[i] = tolower(str[i]);
             if(str.find("yes") != std::string::npos ||atoi(str.c_str()) == 1 ) {
                 cfg.serialPort = ports[0];
