@@ -56,6 +56,7 @@ namespace ydlidar{
 		_sampling_rate=-1;
 		model = -1;
         firmware_version = 0;
+	node_counts = 720;
 
         //parse parameters
         PackageSampleBytes = 2;
