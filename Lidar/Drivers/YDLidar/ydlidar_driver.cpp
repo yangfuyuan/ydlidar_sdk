@@ -1083,7 +1083,29 @@ namespace ydlidar{
 			}
 		}
 
-        std::sort(nodebuffer, nodebuffer + count, &angleLessThan);
+        size_t zero_pos = 0;
+        float pre_degree = (nodebuffer[0].angle_q6_checkbit >> LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT)/64.0f;
+
+        for (i = 1; i < (int)count ; ++i) {
+            float degree = (nodebuffer[i].angle_q6_checkbit >> LIDAR_RESP_MEASUREMENT_ANGLE_SHIFT)/64.0f;
+            if (zero_pos == 0 && (pre_degree - degree > 180)) {
+                zero_pos = i;
+                break;
+            }
+            pre_degree = degree;
+        }
+
+
+        node_info *tmpbuffer = new node_info[count];
+        for (i = (int)zero_pos; i < (int)count; i++) {
+            tmpbuffer[i-zero_pos] = nodebuffer[i];
+        }
+        for (i = 0; i < (int)zero_pos; i++) {
+            tmpbuffer[i+(int)count-zero_pos] = nodebuffer[i];
+        }
+
+        memcpy(nodebuffer, tmpbuffer, count*sizeof(node_info));
+        delete[] tmpbuffer;
 		return RESULT_OK;
 	}
 
