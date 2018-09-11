@@ -1028,7 +1028,6 @@ namespace ydlidar{
 
 	result_t YDlidarDriver::ascendScanData(node_info * nodebuffer, size_t count) {
 		float inc_origin_angle = (float)360.0/count;
-		node_info *tmpbuffer = new node_info[count];
 		int i = 0;
 
 		for (i = 0; i < (int)count; i++) {
@@ -1047,7 +1046,6 @@ namespace ydlidar{
 		}
 
 		if (i == (int)count){
-			delete[] tmpbuffer;
 			return RESULT_FAIL;
 		}
 
@@ -1088,6 +1086,7 @@ namespace ydlidar{
 			pre_degree = degree;
 		}
 
+		node_info *tmpbuffer = new node_info[count];
 		for (i = (int)zero_pos; i < (int)count; i++) {
 			tmpbuffer[i-zero_pos] = nodebuffer[i];
 		}
