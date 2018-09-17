@@ -124,7 +124,7 @@ namespace ydlidar{
 		}
 
 		isConnected = true;
-
+		stop();
 		clearDTR();
 
 		return RESULT_OK;
