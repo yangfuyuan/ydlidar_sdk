@@ -124,7 +124,11 @@ namespace ydlidar{
 		}
 
 		isConnected = true;
-		stop();
+        {
+            ScopedLocker l(_lock);
+            sendCommand(LIDAR_CMD_FORCE_STOP);
+            sendCommand(LIDAR_CMD_STOP);
+        }
 		clearDTR();
 
 		return RESULT_OK;
@@ -634,7 +638,7 @@ namespace ydlidar{
                             isScanning = false;
                             _cond.set();
                         }
-                        throw DeviceException("wait scan data error for serial exception. exit scanning thread");
+                        //throw DeviceException("wait scan data error for serial exception. exit scanning thread");
                     } else {//
                         isAutoconnting = true;
                         again:
@@ -642,7 +646,7 @@ namespace ydlidar{
                             ScopedLocker lck(_serial_lock);
                             if(_serial){
                                 if(_serial->isOpen()){
-									sendCommand(LIDAR_CMD_STOP);
+                                    //sendCommand(LIDAR_CMD_STOP);
                                     _serial->close();
 
                                 }
