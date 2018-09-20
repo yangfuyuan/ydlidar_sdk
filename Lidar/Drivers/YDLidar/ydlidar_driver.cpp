@@ -1017,6 +1017,7 @@ namespace ydlidar{
                 if(scan_node_count == 0) {
                     return RESULT_FAIL;
                 }
+            	ScopedLocker lock(_lock);
                 size_t size_to_copy = min(count, scan_node_count);
                 memcpy(nodebuffer, scan_node_buf, size_to_copy*sizeof(node_info));
                 count = size_to_copy;
