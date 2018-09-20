@@ -56,7 +56,7 @@ namespace ydlidar{
 		_sampling_rate=-1;
 		model = -1;
         firmware_version = 0;
-	node_counts = 720;
+        node_counts = 720;
 
         //parse parameters
         PackageSampleBytes = 2;
@@ -136,7 +136,11 @@ namespace ydlidar{
 		}
 
 		isConnected = true;
-
+        {
+            std::lock_guard<std::mutex> l(_lock);
+            sendCommand(LIDAR_CMD_FORCE_STOP);
+            sendCommand(LIDAR_CMD_STOP);
+        }
 		clearDTR();
 
 		return RESULT_OK;
@@ -659,7 +663,7 @@ namespace ydlidar{
                             isScanning = false;
                             cond_.notify_one();
                         }
-                        throw DeviceException("wait scan data error for serial exception. exit scanning thread");
+                        //throw DeviceException("wait scan data error for serial exception. exit scanning thread");
                     } else {//
                         isAutoconnting = true;
                         again:
@@ -667,7 +671,7 @@ namespace ydlidar{
                             std::lock_guard<std::mutex> lck(_serial_lock);
                             if(_serial){
                                 if(_serial->isOpen()){
-									sendCommand(LIDAR_CMD_STOP);
+                                    //sendCommand(LIDAR_CMD_STOP);
                                     _serial->closefd();
 
                                 }
