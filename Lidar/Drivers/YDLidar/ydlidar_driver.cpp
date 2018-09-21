@@ -639,6 +639,7 @@ namespace ydlidar{
                             isScanning = false;
                             _cond.set();
                         }
+			return RESULT_FAIL;
                         //throw DeviceException("wait scan data error for serial exception. exit scanning thread");
                     } else {//
                         isAutoconnting = true;
