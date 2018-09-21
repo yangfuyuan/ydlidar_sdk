@@ -65,6 +65,9 @@
 #include "unix_serial.h"
 #include <Serial/lock.h>
 
+/* I tried 0, 1, 10 and 16, but it does not seem to change anything... */
+#define FIFO_SIZE 16
+
 #ifndef TIOCINQ
 #ifdef FIONREAD
 #define TIOCINQ FIONREAD
@@ -965,6 +968,7 @@ struct serial_struct {
 			if (serial.flags & ASYNC_SPD_CUST) {
 				serial.flags &= ~ASYNC_SPD_CUST;
 				serial.custom_divisor = 0;
+                serial.xmit_fifo_size = FIFO_SIZE; // what is "xmit" ??
 				// we don't check on errors because a driver can has not this feature
 				::ioctl(fd_, TIOCSSERIAL, &serial);
 			}
@@ -1008,9 +1012,9 @@ struct serial_struct {
 				return false;
 			}
 
-			if (::ioctl(fd_, TCSETS2, &tio2) != -1 && ::ioctl(fd_, TCGETS2, &tio2) != -1) {
-				return true;
-			}
+//            if (::ioctl(fd_, TCSETS2, &tio2) != -1 && ::ioctl(fd_, TCGETS2, &tio2) != -1) {
+//                return true;
+//            }
 		}
 
 		struct serial_struct serial;
@@ -1022,6 +1026,8 @@ struct serial_struct {
 		serial.flags &= ~ASYNC_SPD_MASK;
 		serial.flags |= (ASYNC_SPD_CUST /* | ASYNC_LOW_LATENCY*/);
 		serial.custom_divisor = serial.baud_base / baudrate;
+        serial.xmit_fifo_size = FIFO_SIZE; // what is "xmit" ??
+
 
 		if (serial.custom_divisor == 0) {
 			return false;
@@ -1033,6 +1039,10 @@ struct serial_struct {
 		if (::ioctl(fd_, TIOCSSERIAL, &serial) == -1) {
 			return false;
 		}
+
+        if (::ioctl(fd_, TCSETS2, &tio2) != -1 && ::ioctl(fd_, TCGETS2, &tio2) != -1) {
+            return true;
+        }
 
 		return setStandardBaudRate(B38400);
 	}
