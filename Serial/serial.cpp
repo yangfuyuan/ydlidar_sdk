@@ -108,7 +108,7 @@ namespace serial {
 		return pimpl_->open ();
 	}
 
-    void Serial::closefd () {
+    void Serial::closePort () {
 		pimpl_->close ();
 	}
 
@@ -116,11 +116,11 @@ namespace serial {
 		return pimpl_->isOpen ();
 	}
 
-    int Serial::writedata(const uint8_t *data, std::size_t size) {
+    size_t Serial::writeData(const uint8_t *data, std::size_t size) {
         return write(data, size);
     }
 
-    int Serial::readdata(unsigned char *data, std::size_t size) {
+    size_t Serial::readData(uint8_t *data, std::size_t size) {
         return read(data, size);
     }
 
@@ -257,7 +257,7 @@ namespace serial {
 		ScopedReadLock rlock(this->pimpl_);
 		ScopedWriteLock wlock(this->pimpl_);
 		bool was_open = pimpl_->isOpen ();
-        if (was_open) closefd();
+        if (was_open) closePort();
 		pimpl_->setPort (port);
 		if (was_open) open ();
 	}

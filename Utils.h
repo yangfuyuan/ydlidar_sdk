@@ -180,8 +180,8 @@ typedef enum {
 
 
 enum {
-    DRIVER_TYPE_SERIALPORT = 0x0,
-    DRIVER_TYPE_TCP = 0x1,
+    DEVICE_DRIVER_TYPE_SERIALPORT = 0x0,
+    DEVICE_DRIVER_TYPE_TCP = 0x1,
 };
 
 
@@ -492,7 +492,7 @@ inline void init(int argc, char *argv[]) {
 inline bool ok() {
   return g_signal_status == 0;
 }
-inline void shutdown() {
+inline void shutdownNow() {
   trigger_interrupt_guard_condition(SIGINT);
 }
 

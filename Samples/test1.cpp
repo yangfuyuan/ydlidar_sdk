@@ -46,7 +46,7 @@ using namespace ydlidar;
 class LidarTest
 {
 public:
-    explicit LidarTest(const LaserParamCfg& config, uint8_t type = DRIVER_TYPE_SERIALPORT);
+    explicit LidarTest(const LaserParamCfg& config, uint8_t type = DEVICE_DRIVER_TYPE_SERIALPORT);
     ~LidarTest();
 
     void run();

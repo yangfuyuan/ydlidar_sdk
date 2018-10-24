@@ -85,13 +85,13 @@
 
 # pragma warning(disable: 4786)
 # pragma  comment(lib, "ws2_32.lib")
-
+#pragma comment(lib, "setupapi.lib")
 #define IPTOS_LOWDELAY  0x10
 
 #endif
 #include "Host.h"
 #include "StatTimer.h"
-#include <ChannelDevice.h>
+#include "ChannelDevice.h"
 
 //-----------------------------------------------------------------------------
 // General class macro definitions and typedefs
@@ -537,15 +537,15 @@ public:
 
     virtual bool isOpen();
 
-    virtual void closefd();
+    virtual void closePort();
 
     virtual void flush();
 
     virtual int waitfordata(size_t data_count,uint32_t timeout = -1, size_t * returned_size = NULL);
 
-    virtual int writedata(const uint8_t * data, size_t size);
+    virtual size_t writeData(const uint8_t * data, size_t size);
 
-    virtual int readdata(unsigned char * data, size_t size);
+    virtual size_t readData(uint8_t * data, size_t size);
 
 
 protected:

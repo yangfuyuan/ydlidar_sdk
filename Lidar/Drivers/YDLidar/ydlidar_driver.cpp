@@ -90,7 +90,7 @@ namespace ydlidar{
 
 	}
 
-	YDlidarDriver::~YDlidarDriver(){	
+	YDlidarDriver::~YDlidarDriver(){
 
         disconnect();
         isScanning = false;
@@ -101,7 +101,7 @@ namespace ydlidar{
         std::lock_guard<std::mutex> lck(_serial_lock);
 		if(_serial){
 			if(_serial->isOpen()){
-                _serial->closefd();
+                _serial->closePort();
 			}
 		}
 		if(_serial){
@@ -116,17 +116,15 @@ namespace ydlidar{
         std::lock_guard<std::mutex> lck(_serial_lock);
 		if(!_serial){
             switch (m_driver_type) {
-            case DRIVER_TYPE_SERIALPORT:
+            case DEVICE_DRIVER_TYPE_SERIALPORT:
                 _serial = new Serial();
-                _serial->bindport(port_path, _baudrate);
-
                 break;
-            case DRIVER_TYPE_TCP:
+            case DEVICE_DRIVER_TYPE_TCP:
                 _serial = new CActiveSocket();
-                _serial->bindport(port_path, baudrate);
             default:
                 break;
             }
+            _serial->bindport(port_path, baudrate);
 		}
 
 		{
@@ -174,7 +172,7 @@ namespace ydlidar{
             throw DeviceException("The serial port is empty. please check the serial port settigns. ");
         }
 
-        if(m_driver_type == DRIVER_TYPE_SERIALPORT) {
+        if(m_driver_type == DEVICE_DRIVER_TYPE_SERIALPORT) {
             getLidarList();
             std::map<std::string,std::string>::iterator it;
             it = lidar_map.find(config_msg.serialPort);
@@ -197,16 +195,22 @@ namespace ydlidar{
                 }
 
                 if(!found) {
-                    if(config_msg.serialPort != "/dev/ydlidar") {
+                    if(config_msg.serialPort != "/dev/ydlidar") {        
+#if defined(_WIN32)
+                        cfg_.serialPort = config_msg.serialPort;
+                        restart = true;
+
+#else
                         size_t pos = config_msg.serialPort.find("/dev/ttyS");
                         size_t pos1 = config_msg.serialPort.find("/dev/ttyACM");
-                        size_t pos2 = config_msg.serialPort.find("/dev/ttyH");
+                        size_t pos2 = config_msg.serialPort.find("/dev/");
                         if(pos != std::string::npos || pos1 != std::string::npos || pos2 != std::string::npos) {
                             cfg_.serialPort = config_msg.serialPort;
                             restart = true;
                         }else {
                             throw DeviceException("The serial port is error. please check the serial port settigns. ");
                         }
+#endif
                     } else {
                         cfg_.serialPort = config_msg.serialPort;
                         restart = true;
@@ -482,7 +486,7 @@ namespace ydlidar{
         std::lock_guard<std::mutex> lck(_serial_lock);
 		if(_serial){
 			if(_serial->isOpen()){
-                _serial->closefd();
+                _serial->closePort();
 			}
 		}
 		isConnected = false;
@@ -553,7 +557,7 @@ namespace ydlidar{
 		}
 		size_t r;
         while (size) {
-            r = _serial->writedata(data, size);
+            r = _serial->writeData(data, size);
             if( r < 1) {
                 return RESULT_FAIL;
             }
@@ -570,7 +574,7 @@ namespace ydlidar{
 		}
 		size_t r;
         while (size) {
-            r = _serial->readdata(data, size);
+            r = _serial->readData(data, size);
             if (r < 1) {
                 return RESULT_FAIL;
             }
@@ -666,48 +670,48 @@ namespace ydlidar{
                         //throw DeviceException("wait scan data error for serial exception. exit scanning thread");
                     } else {//
                         isAutoconnting = true;
-                        again:
-                        {
-                            std::lock_guard<std::mutex> lck(_serial_lock);
-                            if(_serial){
-                                if(_serial->isOpen()){
-                                    //sendCommand(LIDAR_CMD_STOP);
-                                    _serial->closefd();
-
+                        while (isAutoReconnect&&isAutoconnting) {
+                            {
+                                std::lock_guard<std::mutex> lck(_serial_lock);
+                                if(_serial){
+                                    if(_serial->isOpen()){
+                                        _serial->closePort();
+                                    }
+                                    delete _serial;
+                                    _serial = NULL;
+                                    isConnected = false;
                                 }
-                                delete _serial;
-                                _serial = NULL;
-                                isConnected = false;
-                            }
-                        }
-
-                        while(isAutoReconnect&&connect(serial_port.c_str(), _baudrate) != RESULT_OK){
-                            delay(1000);
-                        }
-                        if(!isAutoReconnect) {
-                            isScanning = false;
-                            return RESULT_FAIL;
-                        }
-                        if(isconnected()) {
-                            if(startAutoScan() == RESULT_OK){
-                                timeout_count =0;
-                                isAutoconnting = false;
-                                continue;
                             }
 
-                        }
-                        goto again;
+                            while(isAutoReconnect&&connect(serial_port.c_str(), _baudrate) != RESULT_OK){
+                                delay(1000);
+                            }
+                            if(!isAutoReconnect) {
+                                isScanning = false;
+                                return RESULT_FAIL;
+                            }
+                            if(isconnected()) {
+                                if(startAutoScan() == RESULT_OK){
+                                    timeout_count =0;
+                                    isAutoconnting = false;
+                                    continue;
+                                }
 
+                            }
+                        }
 
                     }
 
                 } else {
                      timeout_count++;
                 }
-			}
+			}else {
+                timeout_count = 0;
+
+            }
 			for (size_t pos = 0; pos < count; ++pos) {
                 if (local_buf[pos].sync_flag & LIDAR_RESP_MEASUREMENT_SYNCBIT) {
-                    if ((local_scan[0].sync_flag & LIDAR_RESP_MEASUREMENT_SYNCBIT)) {  
+                    if ((local_scan[0].sync_flag & LIDAR_RESP_MEASUREMENT_SYNCBIT)) {
 						_lock.lock();
                         memcpy(scan_node_buf, local_scan, scan_count*sizeof(node_info));
                         scan_node_count = scan_count;
@@ -860,7 +864,7 @@ namespace ydlidar{
 						}
 						break;
 					case 8:
-						CheckSun = currentByte;	
+						CheckSun = currentByte;
 						break;
 					case 9:
 						CheckSun += (currentByte*0x100);
@@ -901,16 +905,16 @@ namespace ydlidar{
 							}else if(recvPos%3 == 1){
 								Valu8Tou16 = recvBuffer[pos];
 							}else{
-								CheckSunCal ^= recvBuffer[pos]; 
+								CheckSunCal ^= recvBuffer[pos];
 							}
 						}else{
 							if(recvPos%2 == 1){
 								Valu8Tou16 += recvBuffer[pos]*0x100;
 								CheckSunCal ^= Valu8Tou16;
 							}else{
-								Valu8Tou16 = recvBuffer[pos];	
+								Valu8Tou16 = recvBuffer[pos];
 							}
-						}				
+						}
 
 						packageBuffer[package_recvPos+recvPos] = recvBuffer[pos];
 						recvPos++;
@@ -934,7 +938,7 @@ namespace ydlidar{
 			CheckSunCal ^= SampleNumlAndCTCal;
 			CheckSunCal ^= LastSampleAngleCal;
 
-			if(CheckSunCal != CheckSun){	
+			if(CheckSunCal != CheckSun){
 				CheckSunResult = false;
 			}else{
 				CheckSunResult = true;
@@ -945,7 +949,7 @@ namespace ydlidar{
 		if(m_intensities){
 			package_CT = package.package_CT;
 		}else{
-			package_CT = packages.package_CT;    
+			package_CT = packages.package_CT;
 		}
 
 		if(package_CT == CT_Normal){
@@ -962,11 +966,11 @@ namespace ydlidar{
                 (*node).distance_q = package.packageSample[package_Sample_Index].PakageSampleDistance >> LIDAR_RESP_MEASUREMENT_DISTANCE_SHIFT;
 			}else{
                 (*node).distance_q = packages.packageSampleDistance[package_Sample_Index] >> LIDAR_RESP_MEASUREMENT_DISTANCE_SHIFT;
-			}	  
+			}
             if(((*node).distance_q) != 0){
                 AngleCorrectForDistance = (int32_t)(((atan(((21.8*(155.3 - ((*node).distance_q)) )/155.3)/((*node).distance_q)))*180.0/3.1415) * 64.0);
 			}else{
-				AngleCorrectForDistance = 0;		
+				AngleCorrectForDistance = 0;
 			}
 			if((FirstSampleAngle + IntervalSampleAngle*package_Sample_Index + AngleCorrectForDistance) < 0){
 				(*node).angle_q6_checkbit = (((uint16_t)(FirstSampleAngle + IntervalSampleAngle*package_Sample_Index + AngleCorrectForDistance + 360*64))<<1) + LIDAR_RESP_MEASUREMENT_CHECKBIT;
@@ -975,7 +979,7 @@ namespace ydlidar{
 					(*node).angle_q6_checkbit = (((uint16_t)(FirstSampleAngle + IntervalSampleAngle*package_Sample_Index + AngleCorrectForDistance - 360*64))<<1) + LIDAR_RESP_MEASUREMENT_CHECKBIT;
 				}else{
 					(*node).angle_q6_checkbit = (((uint16_t)(FirstSampleAngle + IntervalSampleAngle*package_Sample_Index + AngleCorrectForDistance))<<1) + LIDAR_RESP_MEASUREMENT_CHECKBIT;
-				} 
+				}
 			}
 		}else{
             (*node).sync_flag = Node_NotSync;
@@ -1213,7 +1217,7 @@ namespace ydlidar{
 		}
 	}
 
-	/************************************************************************/	
+	/************************************************************************/
 	/* Get heartbeat function status                                        */
 	/************************************************************************/
     bool YDlidarDriver::getHeartBeat() const
@@ -1230,7 +1234,7 @@ namespace ydlidar{
 		isHeartbeat = enable;
 
 	}
-        
+
 	/************************************************************************/
 	/* send heartbeat function package                                      */
 	/************************************************************************/
@@ -1265,7 +1269,7 @@ namespace ydlidar{
 			return RESULT_OK;
 		}
 
-		stop();   
+		stop();
 		startMotor();
 
         {
@@ -1727,7 +1731,7 @@ namespace ydlidar{
         }
 
         // Is it COMX, X>4? ->  "\\.\COMX"
-        if (m_driver_type==DRIVER_TYPE_SERIALPORT&&cfg_.serialPort.size()>=3) {
+        if (m_driver_type==DEVICE_DRIVER_TYPE_SERIALPORT&&cfg_.serialPort.size()>=3) {
             if ( tolower( cfg_.serialPort[0]) =='c' && tolower( cfg_.serialPort[1]) =='o' && tolower( cfg_.serialPort[2]) =='m' ) {
                 // Need to add "\\.\"?
                 if (cfg_.serialPort.size()>4 || cfg_.serialPort[3]>'4')
