@@ -185,6 +185,11 @@ namespace ydlidar{
             }
 
             if(!found) {
+
+#if defined(_WIN32)
+                cfg_.serialPort = config_msg.serialPort;
+                restart = true;
+#else
                 if(config_msg.serialPort != "/dev/ydlidar") {
                     size_t pos = config_msg.serialPort.find("/dev/");
                     if(pos != std::string::npos) {
@@ -197,6 +202,7 @@ namespace ydlidar{
 					cfg_.serialPort = config_msg.serialPort;
                     restart = true;
                 }
+#endif
             }
         }
 
@@ -469,7 +475,10 @@ namespace ydlidar{
 	void YDlidarDriver::disableDataGrabbing() {
 		{
 
-            isScanning = false;
+            if(isScanning) {
+                isScanning = false;
+                _cond.set();
+            }
 		}
 
         _thread.join();
@@ -639,41 +648,40 @@ namespace ydlidar{
                             isScanning = false;
                             _cond.set();
                         }
-			return RESULT_FAIL;
+                        return RESULT_FAIL;
                         //throw DeviceException("wait scan data error for serial exception. exit scanning thread");
                     } else {//
                         isAutoconnting = true;
-                        again:
-                        {
-                            ScopedLocker lck(_serial_lock);
-                            if(_serial){
-                                if(_serial->isOpen()){
-                                    //sendCommand(LIDAR_CMD_STOP);
-                                    _serial->close();
+                        while (isAutoReconnect&&isAutoconnting) {
+                            {
+                                ScopedLocker lck(_serial_lock);
+                                if(_serial){
+                                    if(_serial->isOpen()){
+                                        _serial->close();
 
+                                    }
+                                    delete _serial;
+                                    _serial = NULL;
+                                    isConnected = false;
                                 }
-                                delete _serial;
-                                _serial = NULL;
-                                isConnected = false;
-                            }
-                        }
-
-                        while(isAutoReconnect&&connect(serial_port.c_str(), m_baudrate) != RESULT_OK){
-                            delay(1000);
-                        }
-                        if(!isAutoReconnect) {
-                            isScanning = false;
-                            return RESULT_FAIL;
-                        }
-                        if(isconnected()) {
-                            if(startAutoScan() == RESULT_OK){
-                                timeout_count =0;
-                                isAutoconnting = false;
-                                continue;
                             }
 
+                            while(isAutoReconnect&&connect(serial_port.c_str(), m_baudrate) != RESULT_OK){
+                                delay(1000);
+                            }
+                            if(!isAutoReconnect) {
+                                isScanning = false;
+                                return RESULT_FAIL;
+                            }
+                            if(isconnected()) {
+                                if(startAutoScan() == RESULT_OK){
+                                    timeout_count =0;
+                                    isAutoconnting = false;
+                                    continue;
+                                }
+
+                            }
                         }
-                        goto again;
 
 
                     }
@@ -681,7 +689,9 @@ namespace ydlidar{
                 } else {
                      timeout_count++;
                 }
-			}
+            }else {
+                timeout_count = 0;
+            }
 			for (size_t pos = 0; pos < count; ++pos) {
                 if (local_buf[pos].sync_flag & LIDAR_RESP_MEASUREMENT_SYNCBIT) {
                     if ((local_scan[0].sync_flag & LIDAR_RESP_MEASUREMENT_SYNCBIT)) {  
@@ -933,7 +943,7 @@ namespace ydlidar{
         (*node).sync_quality = Node_Default_Quality;
 
 
-		if(CheckSunResult == true){
+        if(CheckSunResult){
 			if(m_intensities){
 				(*node).sync_quality = (((package.packageSample[package_Sample_Index].PakageSampleDistance&0x03)<<LIDAR_RESP_MEASUREMENT_SYNC_QUALITY_SHIFT)| (package.packageSample[package_Sample_Index].PakageSampleQuality));
                 (*node).distance_q = package.packageSample[package_Sample_Index].PakageSampleDistance >> LIDAR_RESP_MEASUREMENT_DISTANCE_SHIFT;
@@ -1624,30 +1634,29 @@ namespace ydlidar{
         int count = 0;
         scan_heart_beat beat;
         if( cfg_.heartBeat ) {
-            Sync:
-            count++;
-            if(count > 8) {
-                throw DeviceException(" check heartbeat failed, please check lidar model");
-            }
-            result_t ans =setScanHeartbeat(beat);
-            if( ans == RESULT_OK) {
-                if( beat.enable ) {
-                    ans = setScanHeartbeat(beat);
-                    if( ans == RESULT_OK) {
-                        if(!beat.enable) {
-                            setHeartBeat(true);
-                            ret = true;
-                            return ret;
+            while(cfg_.heartBeat) {
+                count++;
+                if(count > 8) {
+                    throw DeviceException(" check heartbeat failed, please check lidar model");
+                }
+                result_t ans =setScanHeartbeat(beat);
+                if( ans == RESULT_OK) {
+                    if( beat.enable ) {
+                        ans = setScanHeartbeat(beat);
+                        if( ans == RESULT_OK) {
+                            if(!beat.enable) {
+                                setHeartBeat(true);
+                                ret = true;
+                                return ret;
+                            }
                         }
+                    } else  {
+                        setHeartBeat(true);
+                        ret = true;
+                        return ret;
                     }
-                    goto Sync;
-                } else  {
-                    setHeartBeat(true);
-                    ret = true;
-                    return ret;
                 }
             }
-            goto Sync;
         }else {
             setHeartBeat(false);
             ret = true;
