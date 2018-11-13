@@ -71,6 +71,8 @@ void LidarTest::LidarScanCallBack(const LaserScan &scan) {
     std::cout<< "scan   system time: "<< scan.system_time_stamp<<std::endl;
     std::cout<< "scan     self time: "<< scan.self_time_stamp<<std::endl;
     std::cout<< "scan     frequency: "<< 1000000000.0/scan.config.scan_time << "HZ"<<std::endl;
+    std::cout<< "lidar    frequency: "<< scan.scan_frequency << "HZ"<<std::endl;
+
 
     for(size_t i =0; i < scan.ranges.size(); i++) {
         // current angle

@@ -57,7 +57,7 @@ namespace ydlidar{
 		model = -1;
         firmware_version = 0;
         node_counts = 720;
-	scan_node_count = 0;
+        scan_node_count = 0;
 
         //parse parameters
         PackageSampleBytes = 2;
@@ -242,11 +242,9 @@ namespace ydlidar{
             if(!checkComms()) {
                 throw DeviceException("Serial port is connection failed.");
             }
-            if(!checkDeviceHealth()) {
-                throw DeviceException("check lidar device health error.");
-            }
-            if(!checkDeviceInfo()) {
-                throw DeviceException("check lidar device information error.");
+            bool ret = checkDeviceHealth();
+            if(!checkDeviceInfo()&&!ret) {
+                throw DeviceException("check lidar device information and health error.");
             }
 
 
@@ -298,6 +296,7 @@ namespace ydlidar{
 
                 uint64_t max_time =nodes[0].stamp ;
                 uint64_t min_time = nodes[0].stamp;
+                float    lidar_frequency = nodes[0].scan_frequence /10.f;
 
                 node_info *angle_compensate_nodes = new node_info[all_nodes_counts];
                 memset(angle_compensate_nodes, 0, all_nodes_counts*sizeof(node_info));
@@ -321,6 +320,9 @@ namespace ydlidar{
                                 angle_compensate_nodes[inter+1]=nodes[i];
                             }
                         }
+                    }
+                    if(nodes[i].scan_frequence != 0) {
+                        lidar_frequency = nodes[i].scan_frequence/10.f;
                     }
 
                     if(nodes[i].stamp > max_time) {
@@ -352,6 +354,7 @@ namespace ydlidar{
                 scan_msg.config.scan_time = scan_time;
                 scan_msg.config.min_range = cfg_.minRange;
                 scan_msg.config.max_range = cfg_.maxRange;
+                scan_msg.scan_frequency   = lidar_frequency;
 
 
                 for (size_t i = 0; i < all_nodes_counts; i++) {
@@ -414,7 +417,6 @@ namespace ydlidar{
 		}
 
 		if(_serial){
-			_serial->flush();
 			_serial->setDTR(1);
 		}
 
@@ -426,7 +428,6 @@ namespace ydlidar{
 		}
 
 		if(_serial){
-			_serial->flush();
 			_serial->setDTR(0);
 		}
 	}
@@ -1139,7 +1140,6 @@ namespace ydlidar{
 			if ((ans = sendCommand(LIDAR_CMD_GET_DEVICE_HEALTH)) != RESULT_OK) {
 				return ans;
 			}
-            _serial->flush();
 			lidar_ans_header response_header;
 			if ((ans = waitResponseHeader(&response_header, timeout)) != RESULT_OK) {
 				return ans;
@@ -1177,8 +1177,6 @@ namespace ydlidar{
             if ((ans = sendCommand(LIDAR_CMD_GET_DEVICE_INFO)) != RESULT_OK) {
 				return ans;
 			}
-            _serial->flush();
-
 			lidar_ans_header response_header;
 			if ((ans = waitResponseHeader(&response_header, timeout)) != RESULT_OK) {
 				return ans;

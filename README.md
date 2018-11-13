@@ -16,13 +16,11 @@ Release Notes
 -------------------------------------------------------------------------------------------------------------------------------------------------------
 | Title      |  Version |  Data |
 | :-------- | --------:|  :--: |
-| SDK     |  1.3.7 |   2018-8-14  |
+| SDK     |  1.3.8 |   2018-11-13  |
 
 
-- [new feature] support mutil-lidar binding port.
-- [new feature] support ini format configuration paramters.
-- [new feature] Get online Lidar list.
-- [Optimization] Simplified interface.
+- [new feature] output scan frequency.
+- [new feature] repair Device health exception.
 
 
 
@@ -323,6 +321,9 @@ data structure:
 
         //! Configuration of scan
         LaserConfig config;
+        
+         ///lidar scan frequency
+   	 float scan_frequency;
 
       };
 
@@ -352,6 +353,9 @@ laser callback function code :
     	  std::cout<< "scan     self time: "<< scan.self_time_stamp<<std::endl;
 
     	  std::cout<< "scan     frequency: "<< 1000000000.0/scan.config.scan_time << "HZ"<<std::endl;
+    	  
+    	  std::cout<< "lidar    frequency: "<< scan.scan_frequency << "HZ"<<std::endl;
+
 
           for(size_t i =0; i < scan.ranges.size(); i++) {
 

@@ -333,8 +333,12 @@ struct LaserScan {
 	uint64_t self_time_stamp;
 	//! System time when first range was measured in nanoseconds
 	uint64_t system_time_stamp;
+
 	//! Configuration of scan
 	LaserConfig config;
+
+    ///lidar scan frequency
+    float scan_frequency;
 };
 
 
