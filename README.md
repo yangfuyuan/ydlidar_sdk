@@ -46,11 +46,18 @@ How to build YDLIDAR SDK samples
     $ cd ydlidar_sdk
 
     $ git checkout master
-
-    $ cd ..
+    
     
 Linux:
 
+    $ cd startup
+    
+    $ chmod +x initenv.sh
+    
+    $ sudo ./initenv.sh  ##change the serial port to be readable and writable
+
+    $ cd ../..
+    
     $ mkdir build
 
     $ cd build
