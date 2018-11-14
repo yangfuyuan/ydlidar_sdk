@@ -1012,9 +1012,9 @@ struct serial_struct {
 				return false;
 			}
 
-//            if (::ioctl(fd_, TCSETS2, &tio2) != -1 && ::ioctl(fd_, TCGETS2, &tio2) != -1) {
-//                return true;
-//            }
+            if (::ioctl(fd_, TCSETS2, &tio2) != -1 && ::ioctl(fd_, TCGETS2, &tio2) != -1) {
+                return true;
+            }
 		}
 
 		struct serial_struct serial;
