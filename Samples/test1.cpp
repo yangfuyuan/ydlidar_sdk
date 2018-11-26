@@ -107,7 +107,8 @@ void LidarTest::run() {
 
             }catch(CorruptedDataException& e) {
                 std::cout<< e.what()<<std::endl;
-
+            }catch(CorruptedDataException& e) {
+                std::cout<< e.what()<<std::endl;
             }catch(DeviceException& e) {
                 std::cout<< e.what()<<std::endl;
                 break;
@@ -119,6 +120,8 @@ void LidarTest::run() {
         std::cout<< e.what()<<std::endl;
     }catch(CorruptedDataException& e) {
 
+        std::cout<< e.what()<<std::endl;
+    }catch(CorruptedDataException& e) {
         std::cout<< e.what()<<std::endl;
 
     }catch(DeviceException& e) {

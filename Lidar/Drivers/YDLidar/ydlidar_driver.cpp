@@ -58,6 +58,8 @@ namespace ydlidar{
         firmware_version = 0;
         node_counts = 720;
         scan_node_count = 0;
+        m_last_ns       = 0;
+        m_ns            = 0;
 
         //parse parameters
         PackageSampleBytes = 2;
@@ -93,7 +95,6 @@ namespace ydlidar{
 
 	YDlidarDriver::~YDlidarDriver(){	
 
-        disconnect();
         isScanning = false;
         isAutoReconnect = false; 
         _thread.join();
@@ -243,8 +244,14 @@ namespace ydlidar{
                 throw DeviceException("Serial port is connection failed.");
             }
             bool ret = checkDeviceHealth();
+            if(!ret) {
+                delay(1000);
+            }
             if(!checkDeviceInfo()&&!ret) {
-                throw DeviceException("check lidar device information and health error.");
+                delay(1000);
+                if(!checkDeviceInfo()){
+                    throw DeviceInformationException("check lidar device information and health error.");
+                }
             }
 
 
@@ -262,10 +269,14 @@ namespace ydlidar{
         if(!isscanning()) {
             result_t s_result= startScan();
             if (s_result != RESULT_OK) {
-                isScanning = false;
-                throw DeviceException("Starting scanning failed.");
+                s_result= startScan();
+                if(s_result != RESULT_OK) {
+                    isScanning = false;
+                    throw DeviceException("Starting scanning failed.");
+                }
+
             }
-            delay(1000);
+            delay(50);
         }
         printf("start scanning.....\n");
         setAutoReconnect(cfg_.autoReconnect);
@@ -675,7 +686,11 @@ namespace ydlidar{
                                 return RESULT_FAIL;
                             }
                             if(isconnected()) {
-                                if(startAutoScan() == RESULT_OK){
+                                {
+                                    ScopedLocker lck(_serial_lock);
+                                    ans = startAutoScan();
+                                }
+                                if(ans == RESULT_OK){
                                     timeout_count =0;
                                     isAutoconnting = false;
                                     continue;
@@ -981,7 +996,11 @@ namespace ydlidar{
 		}
 
         if((*node).sync_flag&LIDAR_RESP_MEASUREMENT_SYNCBIT){
+            m_last_ns = m_ns;
             m_ns = getTime() - (nowPackageNum*3 +10)*trans_delay - (nowPackageNum -1)*m_pointTime;
+            if( (m_ns - m_last_ns )< 0) {
+                m_ns = m_last_ns;
+            }
 		}
         (*node).stamp = m_ns  + package_Sample_Index*m_pointTime;
 		package_Sample_Index++;
@@ -1002,7 +1021,7 @@ namespace ydlidar{
 
 		size_t     recvNodeCount =  0;
 		uint32_t   startTs = getms();
-		uint32_t   waitTime;
+        uint32_t   waitTime = 0;
 		result_t ans;
 
 		while ((waitTime = getms() - startTs) <= timeout && recvNodeCount < count) {
@@ -1357,6 +1376,7 @@ namespace ydlidar{
 	result_t YDlidarDriver::createThread() {
         _thread = CLASS_THREAD(YDlidarDriver, cacheScanData);
         if (_thread.getHandle() == 0) {
+            isScanning = false;
             return RESULT_FAIL;
         }
 		isScanning = true;

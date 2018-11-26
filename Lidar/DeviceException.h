@@ -64,4 +64,15 @@ struct CorruptedDataException : std::exception
     const char* what() const throw() { return desc.c_str(); }
     std::string desc;
 };
+
+struct DeviceInformationException : std::exception
+{
+    DeviceInformationException(std::string str) : desc(str) {}
+    DeviceInformationException(std::string str, std::string detail) {
+        desc = str + "\n\t" + detail;
+    }
+    ~DeviceInformationException() throw() {}
+    const char* what() const throw() { return desc.c_str(); }
+    std::string desc;
+};
 }

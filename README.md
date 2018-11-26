@@ -208,9 +208,9 @@ You should see YDLIDAR's scan result in the console:
 
   	Please select the lidar intensity:0
 
-  	SDK Version: 1..3.7
+  	SDK Version: 1..3.8
 
-  	LIDAR Version: 1.3.7
+  	LIDAR Version: 1.3.8
 
   	fhs_lock: creating lockfile:      18341
 

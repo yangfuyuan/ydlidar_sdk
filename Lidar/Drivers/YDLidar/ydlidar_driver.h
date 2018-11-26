@@ -682,6 +682,7 @@ namespace ydlidar{
         uint32_t                            m_baudrate;					///< baud rate
         bool                                isSupportMotorCtrl;			///< Motor control
         uint64_t                            m_ns;						///< time stamp
+        uint64_t                            m_last_ns;						///< time stamp
         uint32_t                            m_pointTime;				///< laser point time interval
         uint32_t                            trans_delay;				///< Transmission time
         uint16_t                            firmware_version;          ///< Firmware version
